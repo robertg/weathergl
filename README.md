@@ -18,6 +18,14 @@
 9. Static Collision Detection to enable an immersive environment (e.g. bumping into things when walking around).
 10. Visual snow and rain effects using particle systems and/or other graphic techniques.
 
+# Conventions:
+# 1 unit == 1 meter
+
+Sandbox view == 1.2km^2
+Foreground == 1 km^2, height == 2m max
+Background == 4 * 0.2km*1.2km, height == 100m
+<!-- Fog outside Sandbox? -->
+
 ### Reading:
  - (Bump mapping) http://mmikkelsen3d.blogspot.ca/2011/07/derivative-maps.html
    - https://threejs.org/docs/?q=TextureLoader#Reference/Loaders/TextureLoader
@@ -25,6 +33,13 @@
  - https://github.com/ashima/webgl-noise
  - http://vterrain.org/Elevation/global.html
  - http://srchea.com/terrain-generation-the-diamond-square-algorithm-and-three-js
+
+### Lighting:
+ - https://threejs.org/docs/api/lights/AmbientLight.html
+ - https://threejs.org/docs/api/lights/DirectionalLight.html
+ - http://learningthreejs.com/blog/2012/01/20/casting-shadows/
+ - http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-16-shadow-mapping/
+ - https://github.com/mrdoob/three.js/issues/6420
 
 ### Misc:
 - Car: http://www.blendswap.com/blends/view/76077

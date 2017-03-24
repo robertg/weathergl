@@ -7,6 +7,16 @@ import { Terrain } from './external/generator';
 import './App.css';
 
 class App extends Component {
+  scene:Scene;
+  camera:PerspectiveCamera;
+  renderer:PerspectiveCamera;
+  resize:Function;
+  initScene:Function;
+  renderFrame:Function;
+  node:Object;
+  foregroundSurface:Mesh;
+  cube:Mesh;
+
   constructor() {
     super();
 
@@ -46,22 +56,26 @@ class App extends Component {
     this.cube = new Mesh(geometry, material);
     this.scene.add(this.cube);
 
-    const meshWidth = 1;
-    const meshHeight = 1;
+    const meshWidth = 2;
+    const meshHeight = 2;
     const meshWidthSegments = meshWidth * 10;
     const meshHeightSegments = meshHeight * 10;
-    const foregroundSurface = new Mesh(
+
+    this.foregroundSurface = new Mesh(
         new PlaneGeometry(meshWidth, meshHeight, meshWidthSegments, meshHeightSegments),
         new MeshBasicMaterial({ color: 0xffffff }),
     );
 
-    // TODO: Pass in vertices, apply heightmap
-    Terrain.DiamondSquare(foregroundSurface.geometry.vertices,
-      { xSegments: meshWidthSegments,
-        ySegments: meshHeightSegments,
-        maxHeight: 10,
-        minHeight: 0 });
-    this.scene.add(foregroundSurface);
+    const terrainOptions = { xSegments: meshWidthSegments,
+      ySegments: meshHeightSegments,
+      maxHeight: 0.5,
+      easing: Terrain.EaseInOut,
+      minHeight: -0.5 };
+
+    this.foregroundSurface.rotation.x = -0.5 * Math.PI;
+    Terrain.DiamondSquare(this.foregroundSurface.geometry.vertices, terrainOptions);
+    Terrain.Normalize(this.foregroundSurface, terrainOptions);
+    this.scene.add(this.foregroundSurface);
   }
 
   renderFrame() {
@@ -71,6 +85,8 @@ class App extends Component {
 
     this.cube.rotation.x += 0.005;
     this.cube.rotation.y += 0.005;
+    this.foregroundSurface.rotation.x += 0.005;
+    this.foregroundSurface.rotation.y += 0.005;
   }
 
   render() {

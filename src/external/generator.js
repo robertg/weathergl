@@ -1,4 +1,3 @@
-// @flow
 /* eslint-disable */
 
 // From https://github.com/IceCreamYou/THREE.Terrain/blob/gh-pages/src/generators.js
@@ -71,6 +70,55 @@ Terrain.DiamondSquare = function (g, options) {
       g[j * xl + i].z += heightmap[i][j];
     }
   }
+};
+
+Terrain.EaseInOut = function(x) {
+    return x*x*(3-2*x);
+};
+
+Terrain.Linear = function(x) {
+    return x;
+};
+
+Terrain.Clamp = function(g, options) {
+    var min = Infinity,
+        max = -Infinity,
+        l = g.length,
+        i;
+    options.easing = options.easing || Terrain.Linear;
+    for (i = 0; i < l; i++) {
+        if (g[i].z < min) min = g[i].z;
+        if (g[i].z > max) max = g[i].z;
+    }
+    var actualRange = max - min,
+        optMax = typeof options.maxHeight !== 'number' ? max : options.maxHeight,
+        optMin = typeof options.minHeight !== 'number' ? min : options.minHeight,
+        targetMax = options.stretch ? optMax : (max < optMax ? max : optMax),
+        targetMin = options.stretch ? optMin : (min > optMin ? min : optMin),
+        range = targetMax - targetMin;
+    if (targetMax < targetMin) {
+        targetMax = optMax;
+        range = targetMax - targetMin;
+    }
+    for (i = 0; i < l; i++) {
+        g[i].z = options.easing((g[i].z - min) / actualRange) * range + optMin;
+    }
+};
+
+Terrain.Normalize = function(mesh, options) {
+    var v = mesh.geometry.vertices;
+    // Keep the terrain within the allotted height range if necessary, and do easing.
+    Terrain.Clamp(v, options);
+    // Call the "after" callback
+    if (typeof options.after === 'function') {
+        options.after(v, options);
+    }
+    // Mark the geometry as having changed and needing updates.
+    mesh.geometry.verticesNeedUpdate = true;
+    mesh.geometry.normalsNeedUpdate = true;
+    mesh.geometry.computeBoundingSphere();
+    mesh.geometry.computeFaceNormals();
+    mesh.geometry.computeVertexNormals();
 };
 
 export { Terrain };
