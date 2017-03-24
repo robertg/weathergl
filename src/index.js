@@ -8,9 +8,10 @@ import './index.css';
 function bar(x): number {
   return x.length;
 }
+
 console.log(bar('Hello, world!'));
 
 ReactDOM.render(
   <App />,
-  document.getElementById('root')
+  document.getElementById('root'),
 );
