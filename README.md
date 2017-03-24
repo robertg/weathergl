@@ -1,9 +1,43 @@
 # WeatherGL
 
-Requirements:
+### Requirements:
  - https://nodejs.org/en/download/
    - Node.js 6.10 or higher.
    - npm 3.10.10 or higher.
+
+### Objectives:
+
+1. The WeatherGL scene is correctly modeled with no visual artifacts or distortion.
+2. Models rendered in the WeatherGL scene are texture mapped.
+3. Rough surfaces in the scene (e.g. dirt) are bump mapped.
+4. An easy to use User Interface to change between the various weather options, and to interact with the environment.
+5. Synced sound effects which provide immersion into WeatherGLs landscape.
+6. A skybox with no visual artifacts or distortion.
+7. Lens flare for weather parameters which contain the sun. The lens flare should have no artifacts or distortion.
+8. Shadows using shadow mapping for weather parameters that contain the sun.
+9. Static Collision Detection to enable an immersive environment (e.g. bumping into things when walking around).
+10. Visual snow and rain effects using particle systems and/or other graphic techniques.
+
+### Reading:
+ - (Bump mapping) http://mmikkelsen3d.blogspot.ca/2011/07/derivative-maps.html
+   - https://threejs.org/docs/?q=TextureLoader#Reference/Loaders/TextureLoader
+ - http://vterrain.org/Water/
+ - https://github.com/ashima/webgl-noise
+ - http://vterrain.org/Elevation/global.html
+ - http://srchea.com/terrain-generation-the-diamond-square-algorithm-and-three-js
+
+### Misc:
+- Car: http://www.blendswap.com/blends/view/76077
+  - cc-by commons
+  - https://github.com/mrdoob/three.js/issues/8677
+- Generate terrain ()
+  Ex:
+   - https://github.com/IceCreamYou/THREE.Terrain
+   - https://github.com/srchea/Terrain-Generation
+   - https://github.com/maurizzzio/Three.js-City
+
+- Foreground has detailed terrain generation (likely fixed heightmap)
+- Mountainous Background is generated
 
 
  =================

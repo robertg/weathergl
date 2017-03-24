@@ -5,17 +5,20 @@
   "//": "For github pages: homepage: http://robertg.github.io/weathergl",
   "dependencies": {
     "react": "^15.4.2",
+    "react-document-title": "^2.0.2",
     "react-dom": "^15.4.2",
     "three": "^0.84.0"
   },
   "devDependencies": {
     "flow-bin": "^0.41.0",
     "gh-pages": "^0.12.0",
+    "jscs": "^3.0.7",
     "react-scripts": "0.9.5"
   },
   "scripts": {
     "start": "react-scripts start",
     "flow": "flow",
+    "format": "jscs",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
