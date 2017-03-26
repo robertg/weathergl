@@ -1,15 +1,23 @@
 // @flow
 
 import React, { Component } from 'react';
-import DocumentTitle from 'react-document-title';
-import { WebGLRenderer, Scene, PerspectiveCamera, PlaneGeometry, BoxGeometry, MeshBasicMaterial, Mesh } from 'three';
+import { WebGLRenderer, Scene, PerspectiveCamera, PlaneGeometry, BoxGeometry, MeshBasicMaterial, MeshLambertMaterial, Mesh, BufferGeometry, RawShaderMaterial, TextureLoader, RepeatWrapping, BufferAttribute, PointLight, ShaderMaterial, UniformsUtils, UniformsLib, HemisphereLight, AmbientLight, DirectionalLight, VertexNormalsHelper, DirectionalLightHelper, Object3D, Color } from 'three';
 import { Terrain } from './external/generator';
+import { Terra } from './external/terra';
+import TrackballControls from 'three-trackballcontrols';
+import { OrbitControls } from './external/orbitcontrols';
+import * as heightfield from './external/heightfield';
 import './App.css';
+
+/* eslint-disable */
+import ground_vert from '!!raw!./shader/ground.vert.glsl';
+import ground_frag from '!!raw!./shader/ground.frag.glsl';
+/* eslint-enable */
 
 class App extends Component {
   scene:Scene;
   camera:PerspectiveCamera;
-  renderer:PerspectiveCamera;
+  renderer:WebGLRenderer;
   resize:Function;
   initScene:Function;
   renderFrame:Function;
@@ -21,9 +29,10 @@ class App extends Component {
     super();
 
     this.scene = new Scene();
-    this.camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    this.camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 4000);
     this.renderer = new WebGLRenderer();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    // this.renderer.shadowMap.enabled = true;
 
     this.resize = this.resize.bind(this);
     this.initScene = this.initScene.bind(this);
@@ -34,8 +43,11 @@ class App extends Component {
     this.node.appendChild(this.renderer.domElement);
     window.addEventListener('resize', this.resize);
 
-    this.initScene();
-    this.renderFrame();
+    let self = this;
+    new TextureLoader().load('heightmap.png', function(ground_hmap) {
+      self.initScene(ground_hmap);
+      self.renderFrame();
+    });
   }
 
   componentWillUnmount() {
@@ -48,52 +60,153 @@ class App extends Component {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
-  initScene() {
-    this.camera.position.z = 5;
+  initScene(ground_hmap) {
+    this.camera.position.z = 100;
+    this.scene.add(this.camera);
 
-    const geometry = new BoxGeometry(1, 1, 1);
-    const material = new MeshBasicMaterial({ color: 0xffffff });
+    // debug
+    this.controls = new OrbitControls(this.camera);
+    this.controls.rotateSpeed = 1.0;
+    this.controls.zoomSpeed = 1.2;
+    this.controls.panSpeed = 0.8;
+    this.controls.noZoom = false;
+    this.controls.noPan = false;
+    this.controls.staticMoving = true;
+    this.controls.dynamicDampingFactor = 0.3;
+    this.controls.keys = [ 65, 83, 68 ];
+
+    const geometry = new BoxGeometry(10, 10, 10);
+    const material = new MeshLambertMaterial({ color: 0xffffff });
     this.cube = new Mesh(geometry, material);
+    // this.cube.receiveShadow = true;
+    // this.cube.castShadow = true;
+    this.cube.position.z += 30;
     this.scene.add(this.cube);
 
-    const meshWidth = 2;
-    const meshHeight = 2;
-    const meshWidthSegments = meshWidth * 10;
-    const meshHeightSegments = meshHeight * 10;
+    // const meshWidth = 100;
+    // const meshHeight = 100;
+    // const meshWidthSegments = meshWidth;
+    // const meshHeightSegments = meshHeight;
 
-    this.foregroundSurface = new Mesh(
-        new PlaneGeometry(meshWidth, meshHeight, meshWidthSegments, meshHeightSegments),
-        new MeshBasicMaterial({ color: 0xffffff }),
-    );
+    // this.foregroundSurface = new Mesh(
+    //     new PlaneGeometry(meshWidth, meshHeight, meshWidthSegments, meshHeightSegments),
+    //     new MeshBasicMaterial({ color: 0xffffff }),
+    // // );
 
-    const terrainOptions = { xSegments: meshWidthSegments,
-      ySegments: meshHeightSegments,
-      maxHeight: 0.5,
-      easing: Terrain.EaseInOut,
-      minHeight: -0.5 };
+    // const terrainOptions = { xSegments: meshWidthSegments,
+    //   ySegments: meshHeightSegments,
+    //   maxHeight: 10,
+    //   easing: Terrain.EaseInOut,
+    //   minHeight: -1 };
 
-    this.foregroundSurface.rotation.x = -0.5 * Math.PI;
-    Terrain.DiamondSquare(this.foregroundSurface.geometry.vertices, terrainOptions);
-    Terrain.Normalize(this.foregroundSurface, terrainOptions);
-    this.scene.add(this.foregroundSurface);
+    // this.foregroundSurface.rotation.x = -0.5 * Math.PI;
+    // Terrain.DiamondSquare(this.foregroundSurface.geometry.vertices, terrainOptions);
+    // Terrain.Normalize(this.foregroundSurface, terrainOptions);
+    // this.scene.add(this.foregroundSurface);
+
+    // Setup ground:
+    // Only works on power of 2 heightmaps!
+    // Generated with http://cpetry.github.io/TextureGenerator-Online/
+    ground_hmap.wrapS = RepeatWrapping;
+    ground_hmap.wrapT = RepeatWrapping;
+
+    let ground_geo = new BufferGeometry();
+    const groundHmapSize = 500;
+
+    const xCellCount = Math.floor(Math.sqrt(262144 / (3 * 2)));
+    const yCellCount = xCellCount;
+    const cellSize = groundHmapSize / xCellCount;
+
+    let hf = heightfield.create(ground_hmap.image, cellSize, -1, 20);
+    console.log(hf);
+
+    // Construct a terrain mesh just like spacejack/terra:
+    const vtxBufs = Terra.createVtxBuffers(cellSize, hf.xCount + 1, hf.yCount + 1);
+    const idBuf = Terra.createIdBuffer(hf.xCount + 1, hf.yCount + 1);
+    ground_geo.addAttribute('position', new BufferAttribute(vtxBufs.position, 3));
+    ground_geo.addAttribute('uv', new BufferAttribute(vtxBufs.uv, 2));
+    ground_geo.setIndex(new BufferAttribute(idBuf, 1));
+
+    // https://github.com/mrdoob/three.js/wiki/Uniforms-types
+    // Add constants required for shaders
+    let uniforms = UniformsUtils.merge([
+        UniformsLib['lights'], {
+          hmap: {type: 't', value: null},
+          hmap_scale: { type: '3f', value: [1.0 / groundHmapSize, 1.0 / groundHmapSize, 30] }
+        }]);
+    uniforms.hmap.value = ground_hmap; // Assign hmap image (cause UniformsUtils.merge calls clone())
+
+
+    let ground_mat = new ShaderMaterial({
+      uniforms: uniforms,
+      vertexShader: ground_vert,
+      fragmentShader: ground_frag,
+      lights: true
+    });
+
+    this.ground_mesh = new Mesh(ground_geo, ground_mat);
+
+    this.ground_mesh.geometry.computeFaceNormals();
+    this.ground_mesh.geometry.computeVertexNormals();
+    console.log(this.ground_mesh.geometry);
+    this.ground_mesh.geometry.attributes.normal.array = hf.vtxNormals;
+
+    console.log(this.ground_mesh.geometry);
+
+    // this.ground_mesh.rotation.x = -0.5 * Math.PI;
+
+    // this.ground_mesh.receiveShadow = true;
+    // this.ground_mesh.castShadow = true;
+    this.scene.add(this.ground_mesh);
+
+
+    // http://blog.cjgammon.com/threejs-lights-cameras
+    // this.hemisphere_light = new HemisphereLight( 0xffffbb, 0x080820, 1 );
+    // this.scene.add( this.hemisphere_light );
+
+    // this.ambient_light = new AmbientLight(0xffffbb, 0.1);
+
+    // this.scene.add(this.ambient_light);
+
+    this.sunlight = new DirectionalLight( 0xffffbb, 0.7);
+    // this.sunlight.position.set(0,0, 10000);
+    this.sunlight.position.set(100,0, 1000);
+    this.sunlight.target.position.set(0,0,0);
+    let target = new Object3D();
+    target.position.set(0,0,0);
+    // this.sunlight.target = target;
+    // this.sunlight.target = this.camera;
+    this.scene.add(this.sunlight);
+    // this.scene.add(this.sunlight.target);
+    this.sunlight.shadowCameraVisible = true;
+
+
+    // DEBUG:
+    let helper = new VertexNormalsHelper( this.ground_mesh, 2, 0x00ff00, 1 );
+    let helper2 = new DirectionalLightHelper(this.sunlight, 5 );
+
+    // this.scene.add(helper);
+    // this.scene.add(helper2);
+
+    this.scene.background = new Color('skyblue');
   }
 
   renderFrame() {
     requestAnimationFrame(this.renderFrame);
 
+    this.controls.update();
+
     this.renderer.render(this.scene, this.camera);
 
     this.cube.rotation.x += 0.005;
     this.cube.rotation.y += 0.005;
-    this.foregroundSurface.rotation.x += 0.005;
-    this.foregroundSurface.rotation.y += 0.005;
+    // this.foregroundSurface.rotation.x += 0.005;
+    // this.foregroundSurface.rotation.y += 0.005;
   }
 
   render() {
     return (
-      <DocumentTitle title="WeatherGL">
-        <div ref={(node) => { this.node = node; }} className="App" />
-      </DocumentTitle>
+      <div ref={(node) => { this.node = node; }} className="App" />
     );
   }
 }

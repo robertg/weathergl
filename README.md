@@ -18,13 +18,12 @@
 9. Static Collision Detection to enable an immersive environment (e.g. bumping into things when walking around).
 10. Visual snow and rain effects using particle systems and/or other graphic techniques.
 
-# Conventions:
-# 1 unit == 1 meter
-
-Sandbox view == 1.2km^2
-Foreground == 1 km^2, height == 2m max
-Background == 4 * 0.2km*1.2km, height == 100m
-<!-- Fog outside Sandbox? -->
+### Conventions:
+ - 1 unit == 1 meter
+ - Sandbox view == 1.2km^2
+ - Foreground == 1 km^2, height == 2m max
+ - Background == 4 * 0.2km*1.2km, height == 100m
+ - <!-- Fog outside Sandbox? -->
 
 ### Reading:
  - (Bump mapping) http://mmikkelsen3d.blogspot.ca/2011/07/derivative-maps.html
@@ -41,6 +40,14 @@ Background == 4 * 0.2km*1.2km, height == 100m
  - http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-16-shadow-mapping/
  - https://github.com/mrdoob/three.js/issues/6420
 
+### Terrain:
+ - Inspiration: https://github.com/spacejack/terra/
+ - Terrain mesh moves with the camera, loaded from the heightmap
+ - Use sampler2D to store terrain.
+    - https://threejs.org/docs/api/core/BufferGeometry.html
+    - https://threejs.org/docs/api/materials/RawShaderMaterial.html
+    - Bump mapping: http://fabiensanglard.net/bumpMapping/index.php
+
 ### Misc:
 - Car: http://www.blendswap.com/blends/view/76077
   - cc-by commons
@@ -50,6 +57,10 @@ Background == 4 * 0.2km*1.2km, height == 100m
    - https://github.com/IceCreamYou/THREE.Terrain
    - https://github.com/srchea/Terrain-Generation
    - https://github.com/maurizzzio/Three.js-City
+
+## Skybox:
+ - http://www.custommapmakers.org/skyboxes.php
+ - Use CubeTextureLoader.
 
 - Foreground has detailed terrain generation (likely fixed heightmap)
 - Mountainous Background is generated

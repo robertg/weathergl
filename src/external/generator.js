@@ -64,6 +64,8 @@ Terrain.DiamondSquare = function (g, options) {
     }
   }
 
+  console.log(heightmap);
+
     // Apply heightmap
   for (i = 0; i < xl; i++) {
     for (j = 0; j < yl; j++) {
