@@ -43,8 +43,8 @@ class App extends Component {
     this.node.appendChild(this.renderer.domElement);
     window.addEventListener('resize', this.resize);
 
-    let self = this;
-    new TextureLoader().load('heightmap.png', function(ground_hmap) {
+    const self = this;
+    new TextureLoader().load('heightmap.png', (ground_hmap) => {
       self.initScene(ground_hmap);
       self.renderFrame();
     });
@@ -73,7 +73,7 @@ class App extends Component {
     this.controls.noPan = false;
     this.controls.staticMoving = true;
     this.controls.dynamicDampingFactor = 0.3;
-    this.controls.keys = [ 65, 83, 68 ];
+    this.controls.keys = [65, 83, 68];
 
     const geometry = new BoxGeometry(10, 10, 10);
     const material = new MeshLambertMaterial({ color: 0xffffff });
@@ -110,14 +110,14 @@ class App extends Component {
     ground_hmap.wrapS = RepeatWrapping;
     ground_hmap.wrapT = RepeatWrapping;
 
-    let ground_geo = new BufferGeometry();
+    const ground_geo = new BufferGeometry();
     const groundHmapSize = 500;
 
     const xCellCount = Math.floor(Math.sqrt(262144 / (3 * 2)));
     const yCellCount = xCellCount;
     const cellSize = groundHmapSize / xCellCount;
 
-    let hf = heightfield.create(ground_hmap.image, cellSize, -1, 20);
+    const hf = heightfield.create(ground_hmap.image, cellSize, -1, 20);
     console.log(hf);
 
     // Construct a terrain mesh just like spacejack/terra:
@@ -129,19 +129,19 @@ class App extends Component {
 
     // https://github.com/mrdoob/three.js/wiki/Uniforms-types
     // Add constants required for shaders
-    let uniforms = UniformsUtils.merge([
-        UniformsLib['lights'], {
-          hmap: {type: 't', value: null},
-          hmap_scale: { type: '3f', value: [1.0 / groundHmapSize, 1.0 / groundHmapSize, 30] }
-        }]);
+    const uniforms = UniformsUtils.merge([
+      UniformsLib.lights, {
+        hmap: { type: 't', value: null },
+        hmap_scale: { type: '3f', value: [1.0 / groundHmapSize, 1.0 / groundHmapSize, 30] },
+      }]);
     uniforms.hmap.value = ground_hmap; // Assign hmap image (cause UniformsUtils.merge calls clone())
 
 
-    let ground_mat = new ShaderMaterial({
-      uniforms: uniforms,
+    const ground_mat = new ShaderMaterial({
+      uniforms,
       vertexShader: ground_vert,
       fragmentShader: ground_frag,
-      lights: true
+      lights: true,
     });
 
     this.ground_mesh = new Mesh(ground_geo, ground_mat);
@@ -168,12 +168,12 @@ class App extends Component {
 
     // this.scene.add(this.ambient_light);
 
-    this.sunlight = new DirectionalLight( 0xffffbb, 0.7);
+    this.sunlight = new DirectionalLight(0xffffbb, 0.7);
     // this.sunlight.position.set(0,0, 10000);
-    this.sunlight.position.set(100,0, 1000);
-    this.sunlight.target.position.set(0,0,0);
-    let target = new Object3D();
-    target.position.set(0,0,0);
+    this.sunlight.position.set(100, 0, 1000);
+    this.sunlight.target.position.set(0, 0, 0);
+    const target = new Object3D();
+    target.position.set(0, 0, 0);
     // this.sunlight.target = target;
     // this.sunlight.target = this.camera;
     this.scene.add(this.sunlight);
@@ -182,8 +182,8 @@ class App extends Component {
 
 
     // DEBUG:
-    let helper = new VertexNormalsHelper( this.ground_mesh, 2, 0x00ff00, 1 );
-    let helper2 = new DirectionalLightHelper(this.sunlight, 5 );
+    const helper = new VertexNormalsHelper(this.ground_mesh, 2, 0x00ff00, 1);
+    const helper2 = new DirectionalLightHelper(this.sunlight, 5);
 
     // this.scene.add(helper);
     // this.scene.add(helper2);
