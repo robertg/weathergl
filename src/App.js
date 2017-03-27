@@ -59,7 +59,8 @@ class App extends Component {
     window.addEventListener('resize', this.resize);
 
     const self = this;
-    new TextureLoader().load('heightmap.png', (ground_hmap) => {
+    // ground_hmap generated with http://cpetry.github.io/TextureGenerator-Online/
+    new TextureLoader().load('heightmap2.png', (ground_hmap) => {
       // Skybox from https://reije081.home.xs4all.nl/skyboxes/
       new CubeTextureLoader().load([
         'skybox45/skyrender0002.bmp',
@@ -162,11 +163,11 @@ class App extends Component {
 
     const ground_geo = new BufferGeometry();
     // Bump Map GPU tearing occurs as a function of groundHmapSize and xCellCount.
-    const groundHmapSize = 700;
+    const groundHmapSize = 1000;
 
-    const xCellCount = 40; // Math.floor(Math.sqrt(262144 / (3 * 2)))
-    const yCellCount = xCellCount;
-    const cellSize = groundHmapSize / xCellCount;
+    // const xCellCount = 2048; // Math.floor(Math.sqrt(262144 / (3 * 2)))
+    // const yCellCount = 2048;
+    const cellSize = groundHmapSize / ground_hmap.image.width;
 
     if(!fast_debug) {
       let maxHeight = 40;

@@ -172,13 +172,13 @@ void main() {
   // Compute height just like the vertex shader.
   vec2 sample = vPos.xy * hmap_scale.xy + vec2(0.5, 0.5);
   vec4 ch = texture2D(hmap, sample);
-  float height = ch.r * hmap_scale.z;
+  float mixer = min(ch.r * 2.0, 1.0);
 
   // Apply the rock and grass texture
   vec3 color = mix(
     texture2D(grass_texture, vUv).rgb,
     texture2D(rock_texture, vUv).rgb,
-    min(height/max_height, 1.0)
+    mixer
   );
 
   // Apply mixed bump map using inspiration from the dHdxy_fwd found in three.js's bumpmap_pars_fragment.glsl :
@@ -188,19 +188,19 @@ void main() {
   float bumpmap_Hll = mix(
     texture2D(grass_bumpmap, vUv).x,
     texture2D(rock_bumpmap, vUv).x,
-    min(height/max_height, 1.0)
+    mixer
   );
 
   float bumpmap_dBx = mix(
     texture2D(grass_bumpmap, vUv + dSTdx).x,
     texture2D(rock_bumpmap, vUv + dSTdx).x,
-    min(height/max_height, 1.0)
+    mixer
   );
 
   float bumpmap_dBy = mix(
     texture2D(grass_bumpmap, vUv + dSTdy).x,
     texture2D(rock_bumpmap, vUv + dSTdy).x,
-    min(height/max_height, 1.0)
+    mixer
   );
 
   float Hll = 5.0 * bumpmap_Hll;
