@@ -5,3 +5,5 @@
    - LICENSE: MIT
    - Copyright (c) 2016 by Mike Linkovich
  - https://csantosbh.wordpress.com/2014/01/09/custom-shaders-with-three-js-uniforms-textures-and-lighting/
+ - Grass Texture: http://trutextures.blogspot.ca/2013/01/free-seamless-tiling-dead-grass-terrain.html
+ - Rock Texture: http://www.virtual-lands-3d.com/textures.html

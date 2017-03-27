@@ -5,12 +5,13 @@ import { WebGLRenderer, Scene, PerspectiveCamera, PlaneGeometry, BoxGeometry, Me
   MeshLambertMaterial, Mesh, BufferGeometry, RawShaderMaterial, TextureLoader, RepeatWrapping,
   BufferAttribute, PointLight, ShaderMaterial, UniformsUtils, UniformsLib, HemisphereLight,
   AmbientLight, DirectionalLight, VertexNormalsHelper, DirectionalLightHelper, Object3D, Color,
-  CubeTextureLoader, Vector3, AxisHelper, CameraHelper, PCFSoftShadowMap } from 'three';
+  CubeTextureLoader, Vector3, AxisHelper, CameraHelper, PCFSoftShadowMap, Vector4 } from 'three';
 import { Terrain } from './external/generator';
 import { Terra } from './external/terra';
 import TrackballControls from 'three-trackballcontrols';
 import { OrbitControls } from './external/orbitcontrols';
 import * as heightfield from './external/heightfield';
+import Stats from 'stats.js';
 import './App.css';
 
 /* eslint-disable */
@@ -33,8 +34,8 @@ class App extends Component {
     super();
 
     this.scene = new Scene();
-    this.camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 4000);
-    this.renderer = new WebGLRenderer();
+    this.camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    this.renderer = new WebGLRenderer({antialias: false});
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
@@ -42,6 +43,15 @@ class App extends Component {
     this.resize = this.resize.bind(this);
     this.initScene = this.initScene.bind(this);
     this.renderFrame = this.renderFrame.bind(this);
+
+    this.debug = true;
+
+    if(this.debug) {
+      this.stats = new Stats();
+      this.stats.showPanel(0);
+
+      document.body.appendChild(this.stats.dom);
+    }
   }
 
   componentDidMount() {
@@ -59,8 +69,18 @@ class App extends Component {
         'skybox45/skyrender0003.bmp',
         'skybox45/skyrender0003.bmp',
         ], (skybox) => {
-          self.initScene(ground_hmap, skybox);
-          self.renderFrame();
+          // Grass texture from http://trutextures.blogspot.ca/2013/01/free-seamless-tiling-dead-grass-terrain.html
+          new TextureLoader().load('grass/texture.jpg', (grass_texture) => {
+            new TextureLoader().load('grass/bumpmap.jpg', (grass_bumpmap) => {
+              // Rock texture from http://www.virtual-lands-3d.com/textures.html
+              new TextureLoader().load('rock2/texture.jpg', (rock_texture) => {
+                new TextureLoader().load('rock2/bumpmap.jpg', (rock_bumpmap) => {
+                self.initScene(ground_hmap, skybox, grass_texture, grass_bumpmap, rock_texture, rock_bumpmap);
+                self.renderFrame();
+              });
+            });
+          });
+        });
       });
     });
   }
@@ -75,9 +95,9 @@ class App extends Component {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
-  initScene(ground_hmap, skybox) {
+  initScene(ground_hmap, skybox, grass_texture, grass_bumpmap, rock_texture, rock_bumpmap) {
     const fast_debug = false;
-    this.camera.position.set(100, 100, 100);
+    this.camera.position.set(100, 0, 100);
     this.camera.lookAt(new Vector3(0, 0, 0));
     this.scene.add(this.camera);
 
@@ -123,19 +143,34 @@ class App extends Component {
 
     // Setup ground:
     // Only works on power of 2 heightmaps!
-    // Generated with http://cpetry.github.io/TextureGenerator-Online/
+    // ground_hmap generated with http://cpetry.github.io/TextureGenerator-Online/
     ground_hmap.wrapS = RepeatWrapping;
     ground_hmap.wrapT = RepeatWrapping;
+    grass_texture.wrapS = RepeatWrapping;
+    grass_texture.wrapT = RepeatWrapping;
+    grass_bumpmap.wrapS = RepeatWrapping;
+    grass_bumpmap.wrapT = RepeatWrapping;
+    rock_texture.wrapS = RepeatWrapping;
+    rock_texture.wrapT = RepeatWrapping;
+    rock_bumpmap.wrapS = RepeatWrapping;
+    rock_bumpmap.wrapT = RepeatWrapping;
+
+    // grass_texture.anisotropy = 16;
+    // rock_texture.anisotropy = 16;
+    // grass_bumpmap.anisotropy = 16;
+    // rock_bumpmap.anisotropy = 16;
 
     const ground_geo = new BufferGeometry();
-    const groundHmapSize = 500;
+    // Bump Map GPU tearing occurs as a function of groundHmapSize and xCellCount.
+    const groundHmapSize = 700;
 
-    const xCellCount = Math.floor(Math.sqrt(262144 / (3 * 2)));
+    const xCellCount = 40; // Math.floor(Math.sqrt(262144 / (3 * 2)))
     const yCellCount = xCellCount;
     const cellSize = groundHmapSize / xCellCount;
 
     if(!fast_debug) {
-      const hf = heightfield.create(ground_hmap.image, cellSize, -1, 20);
+      let maxHeight = 40;
+      const hf = heightfield.create(ground_hmap.image, cellSize, 0, maxHeight);
       console.log(hf);
 
       // Construct a terrain mesh just like spacejack/terra:
@@ -150,9 +185,21 @@ class App extends Component {
       const uniforms = UniformsUtils.merge([
         UniformsLib.lights, {
           hmap: { type: 't', value: null },
-          hmap_scale: { type: '3f', value: [1.0 / groundHmapSize, 1.0 / groundHmapSize, 30] },
+          grass_texture: { type: 't', value: null },
+          grass_bumpmap: { type: 't', value: null },
+          rock_texture: { type: 't', value: null },
+          rock_bumpmap: { type: 't', value: null },
+          offsetRepeat: { value: new Vector4( 0, 0, 1, 1 ) },
+          max_height: {type: 'f', value: maxHeight},
+          hmap_scale: { type: '3f', value: [1.0 / groundHmapSize, 1.0 / groundHmapSize, maxHeight] },
         }]);
-      uniforms.hmap.value = ground_hmap; // Assign hmap image (cause UniformsUtils.merge calls clone())
+
+      // Assign textures here (cause UniformsUtils.merge calls clone())
+      uniforms.hmap.value = ground_hmap;
+      uniforms.grass_texture.value = grass_texture;
+      uniforms.grass_bumpmap.value = grass_bumpmap;
+      uniforms.rock_texture.value = rock_texture;
+      uniforms.rock_bumpmap.value = rock_bumpmap;
 
 
       const ground_mat = new ShaderMaterial({
@@ -162,8 +209,12 @@ class App extends Component {
         lights: true,
       });
 
+      ground_mat.extensions.derivatives = true;
+
       this.ground_mesh = new Mesh(ground_geo, ground_mat);
       this.ground_mesh.receiveShadow = true;
+      this.ground_mesh.castShadow = true;
+
 
       this.ground_mesh.geometry.computeFaceNormals();
       this.ground_mesh.geometry.computeVertexNormals();
@@ -171,6 +222,8 @@ class App extends Component {
 
       // TODO: Cache this, maybe load it from JSON? Or localstorage?
       this.ground_mesh.geometry.attributes.normal.array = hf.vtxNormals;
+
+      this.ground_mesh.uvsNeedUpdate = true;
 
       console.log(this.ground_mesh.geometry);
 
@@ -185,12 +238,12 @@ class App extends Component {
     // this.hemisphere_light = new HemisphereLight( 0xffffbb, 0x080820, 1 );
     // this.scene.add( this.hemisphere_light );
 
-    this.ambientlight = new AmbientLight(0xffffbb, 0.15);
+    this.ambientlight = new AmbientLight(0xffffbb, 0.25);
     this.scene.add(this.ambientlight);
 
-    this.sunlight = new DirectionalLight(0xffffbb, 0.7);
+    this.sunlight = new DirectionalLight(0xffffbb, 0.75);
     // this.sunlight.position.set(0,0, 10000);
-    this.sunlight.position.set(100, 0, 1000);
+    this.sunlight.position.set(100, 100, 1000);
     // this.sunlight.position.set(0, 0, 100);
     this.sunlight.target.position.set(0, 0, 50);
     this.sunlight.castShadow = true;
@@ -218,21 +271,28 @@ class App extends Component {
     // DEBUG:
     // this.scene.add(new VertexNormalsHelper(this.ground_mesh, 2, 0x00ff00, 1));
     // this.scene.add(new DirectionalLightHelper(this.sunlight, 5));
-    this.scene.add(new CameraHelper(this.sunlight.shadow.camera));
-    this.scene.add(new AxisHelper(100));
+    // this.scene.add(new CameraHelper(this.sunlight.shadow.camera));
+    // this.scene.add(new AxisHelper(100));
   }
 
   renderFrame() {
     requestAnimationFrame(this.renderFrame);
 
-    this.controls.update();
-
-    this.renderer.render(this.scene, this.camera);
+    if(this.debug) {
+      this.stats.begin();
+    }
 
     this.cube.rotation.x += 0.005;
     this.cube.rotation.y += 0.005;
     // this.foregroundSurface.rotation.x += 0.005;
     // this.foregroundSurface.rotation.y += 0.005;
+    this.controls.update();
+
+    this.renderer.render(this.scene, this.camera);
+
+    if(this.debug) {
+      this.stats.end();
+    }
   }
 
   render() {

@@ -12,6 +12,7 @@ precision highp float;
 // uniform mat4 projectionMatrix;
 uniform sampler2D hmap;
 uniform vec3 hmap_scale;
+uniform vec4 offsetRepeat;
 
 // attribute vec3 position;
 // attribute vec3 normal;
@@ -38,7 +39,7 @@ void main() {
   vec4 ch = texture2D(hmap, sample);
   float height = ch.r * hmap_scale.z; // rand(pos.xy);
 
-  vUv = uv;
+  vUv = uv * offsetRepeat.zw + offsetRepeat.xy;
   vPos = pos;
   vNormal = normal;
 

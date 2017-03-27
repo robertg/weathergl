@@ -1,14 +1,15 @@
-// inspired by:
+// This ground shader is inspired by:
 // - https://csantosbh.wordpress.com/2014/01/09/custom-shaders-with-three-js-uniforms-textures-and-lighting/
 // - spacejack/terra
 // - https://github.com/mrdoob/three.js/blob/dev/examples/js/ShaderTerrain.js
+// - https://github.com/mrdoob/three.js/blob/dev/examples/js/ShaderSkin.js
 
 precision highp float;
 
-// fragment shaders don't have a default precision so we need
-// to pick one. mediump is a good default. It means "medium precision"
+///////
+/// START three.js shadow utils IMPORT
+///////
 
-uniform sampler2D hmap;
 uniform vec3 ambientLightColor;
 
 #if NUM_DIR_LIGHTS > 0
@@ -25,15 +26,6 @@ struct DirectionalLight {
 
 uniform DirectionalLight directionalLights[NUM_DIR_LIGHTS];
 #endif
-
-varying vec2 vUv;
-varying vec3 vPos;
-varying vec3 vNormal;
-varying vec3 vViewPosition;
-
-///////
-/// START three.js shadow utils IMPORT
-///////
 
 // Imported from https://github.com/mrdoob/three.js/blob/e7dc951e829bad80c244001e6c63023e58ad8260/src/renderers/shaders/ShaderChunk.js
 // https://github.com/mrdoob/three.js/blob/acdda10d5896aa10abdf33e971951dbf7bd8f074/src/renderers/shaders/ShaderChunk/shadowmask_pars_fragment.glsl
@@ -146,23 +138,87 @@ float getShadowMask() {
   return shadow;
 }
 
+// perturbNormalArb derived from: https://github.com/mrdoob/three.js/blob/dev/src/renderers/shaders/ShaderChunk/bumpmap_pars_fragment.glsl
+vec3 perturbNormalArb( vec3 surf_pos, vec3 surf_norm, vec2 dHdxy ) {
+  vec3 vSigmaX = dFdx( surf_pos );
+  vec3 vSigmaY = dFdy( surf_pos );
+  vec3 vN = surf_norm;    // normalized
+  vec3 R1 = cross( vSigmaY, vN );
+  vec3 R2 = cross( vN, vSigmaX );
+  float fDet = dot( vSigmaX, R1 );
+  vec3 vGrad = sign( fDet ) * ( dHdxy.x * R1 + dHdxy.y * R2 );
+  return normalize( abs( fDet ) * surf_norm - vGrad );
+}
+
 ///////
 /// END three.js shadow utils IMPORT
 ///////
 
+uniform sampler2D hmap;
+uniform vec3 hmap_scale;
+uniform float max_height;
+uniform sampler2D grass_texture;
+uniform sampler2D grass_bumpmap;
+uniform sampler2D rock_texture;
+uniform sampler2D rock_bumpmap;
+
+varying vec2 vUv;
+varying vec3 vPos;
+varying vec3 vNormal;
+varying vec3 vViewPosition;
 
 void main() {
-  // gl_FragColor is a special variable a fragment shader
-  // is responsible for setting
-  // gl_FragColor = texture2D(heightMap, vec2(2,500));
-  // vec4 addedLights = vec4(1.0, 1.0, 1.0, 1.0);
+  vec3 normal = normalize(vNormal);
+  // Compute height just like the vertex shader.
+  vec2 sample = vPos.xy * hmap_scale.xy + vec2(0.5, 0.5);
+  vec4 ch = texture2D(hmap, sample);
+  float height = ch.r * hmap_scale.z;
+
+  // Apply the rock and grass texture
+  vec3 color = mix(
+    texture2D(grass_texture, vUv).rgb,
+    texture2D(rock_texture, vUv).rgb,
+    min(height/max_height, 1.0)
+  );
+
+  // Apply mixed bump map using inspiration from the dHdxy_fwd found in three.js's bumpmap_pars_fragment.glsl :
+  vec2 dSTdx = dFdx(vUv);
+  vec2 dSTdy = dFdy(vUv);
+
+  float bumpmap_Hll = mix(
+    texture2D(grass_bumpmap, vUv).x,
+    texture2D(rock_bumpmap, vUv).x,
+    min(height/max_height, 1.0)
+  );
+
+  float bumpmap_dBx = mix(
+    texture2D(grass_bumpmap, vUv + dSTdx).x,
+    texture2D(rock_bumpmap, vUv + dSTdx).x,
+    min(height/max_height, 1.0)
+  );
+
+  float bumpmap_dBy = mix(
+    texture2D(grass_bumpmap, vUv + dSTdy).x,
+    texture2D(rock_bumpmap, vUv + dSTdy).x,
+    min(height/max_height, 1.0)
+  );
+
+  float Hll = 5.0 * bumpmap_Hll;
+  float dBx = 5.0 * bumpmap_dBx - Hll;
+  float dBy = 5.0 * bumpmap_dBy - Hll;
+
+
+  // https://github.com/mrdoob/three.js/blob/dev/examples/js/ShaderSkin.js
+  normal = perturbNormalArb(-vViewPosition, normal, vec2(dBx, dBy));
+
+  // Apply lighting
   vec4 addedLights = vec4(0.0, 0.0, 0.0, 1.0);
 
   #if NUM_DIR_LIGHTS > 0
   for(int l = 0; l < NUM_DIR_LIGHTS; l++) {
     // gl_FragColor = vec4(abs(directionalLights[l].direction), 1);
     vec3 dirHalfVector = normalize(directionalLights[l].direction + normalize(vViewPosition));
-    addedLights.rgb += clamp(dot(normalize(vNormal), dirHalfVector), 0.0, 1.0) * directionalLights[l].color;
+    addedLights.rgb += clamp(dot(normalize(normal), dirHalfVector), 0.0, 1.0) * directionalLights[l].color;
   }
 
   addedLights.rgb *= max(getShadowMask(), 0.25);
@@ -170,7 +226,7 @@ void main() {
   addedLights.rgb += ambientLightColor;
   #endif
 
-  gl_FragColor = vec4(124.0 / 255.0, 252.0 / 255.0, 0.0 / 255.0, 1) * addedLights;
+  gl_FragColor = vec4(color, 1) * addedLights;
 
   // gl_FragColor = vec4(124.0 / 255.0, 252.0 / 255.0, 0.0 / 255.0, 1); // return redish-purple
 }
