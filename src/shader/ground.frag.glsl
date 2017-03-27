@@ -181,7 +181,9 @@ void main() {
     mixer
   );
 
-  // Apply mixed bump map using inspiration from the dHdxy_fwd found in three.js's bumpmap_pars_fragment.glsl :
+  // Apply mixed bump map using inspiration from the dHdxy_fwd found in three.js's bumpmap_pars_fragment.glsl:
+  // http://mmikkelsen3d.blogspot.sk/2011/07/derivative-maps.html
+
   vec2 dSTdx = dFdx(vUv);
   vec2 dSTdy = dFdy(vUv);
 

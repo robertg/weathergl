@@ -65,10 +65,20 @@
 
 ## Particle Systems (Inspiration)
  - https://stemkoski.github.io/Three.js/Particle-Engine.html
+ - https://aerotwist.com/tutorials/creating-particles-with-three-js/
+ - https://threejs.org/docs/?q=Point#Reference/Materials/PointsMaterial
+  - Kinda related for starry night: https://threejs.org/docs/?q=Point#Reference/Lights/PointLight
+
+## Lens Flare
+ - https://github.com/timoxley/threejs/blob/master/examples/webgl_lensflares.html
+ - https://threejs.org/docs/?q=LensFlare#Reference/Objects/LensFlare
 
 - Foreground has detailed terrain generation (likely fixed heightmap)
 - Mountainous Background is generated
 
+
+## Sidebar:
+ - http://balloob.github.io/react-sidebar/example/
 
  =================
 

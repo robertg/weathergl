@@ -7,3 +7,5 @@
  - https://csantosbh.wordpress.com/2014/01/09/custom-shaders-with-three-js-uniforms-textures-and-lighting/
  - Grass Texture: http://trutextures.blogspot.ca/2013/01/free-seamless-tiling-dead-grass-terrain.html
  - Rock Texture: http://www.virtual-lands-3d.com/textures.html
+ - Lens flare Textures from: https://github.com/timoxley/threejs/tree/master/examples/textures/lensflare
+   - http://opengameart.org/content/lens-flares-and-particles

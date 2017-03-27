@@ -5,7 +5,8 @@ import { WebGLRenderer, Scene, PerspectiveCamera, PlaneGeometry, BoxGeometry, Me
   MeshLambertMaterial, Mesh, BufferGeometry, RawShaderMaterial, TextureLoader, RepeatWrapping,
   BufferAttribute, PointLight, ShaderMaterial, UniformsUtils, UniformsLib, HemisphereLight,
   AmbientLight, DirectionalLight, VertexNormalsHelper, DirectionalLightHelper, Object3D, Color,
-  CubeTextureLoader, Vector3, AxisHelper, CameraHelper, PCFSoftShadowMap, Vector4 } from 'three';
+  CubeTextureLoader, Vector3, AxisHelper, CameraHelper, PCFSoftShadowMap, Vector4,
+  Fog, LensFlare, AdditiveBlending } from 'three';
 import { Terrain } from './external/generator';
 import { Terra } from './external/terra';
 import TrackballControls from 'three-trackballcontrols';
@@ -34,8 +35,8 @@ class App extends Component {
     super();
 
     this.scene = new Scene();
-    this.camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    this.renderer = new WebGLRenderer({antialias: false});
+    this.camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+    this.renderer = new WebGLRenderer({antialias: true, alpha: true});
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
@@ -76,13 +77,15 @@ class App extends Component {
               // Rock texture from http://www.virtual-lands-3d.com/textures.html
               new TextureLoader().load('rock2/texture.jpg', (rock_texture) => {
                 new TextureLoader().load('rock2/bumpmap.jpg', (rock_bumpmap) => {
-                self.initScene(ground_hmap, skybox, grass_texture, grass_bumpmap, rock_texture, rock_bumpmap);
-                self.renderFrame();
+                  new TextureLoader().load('lensflare/lensflare0.png', (lensflare0) => {
+                    self.initScene(ground_hmap, skybox, grass_texture, grass_bumpmap, rock_texture, rock_bumpmap, lensflare0);
+                    self.renderFrame();
+                  });
+                });
               });
             });
           });
         });
-      });
     });
   }
 
@@ -96,7 +99,7 @@ class App extends Component {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
-  initScene(ground_hmap, skybox, grass_texture, grass_bumpmap, rock_texture, rock_bumpmap) {
+  initScene(ground_hmap, skybox, grass_texture, grass_bumpmap, rock_texture, rock_bumpmap, lensflare0) {
     const fast_debug = false;
     this.camera.position.set(100, 0, 100);
     this.camera.lookAt(new Vector3(0, 0, 0));
@@ -239,19 +242,19 @@ class App extends Component {
     // this.hemisphere_light = new HemisphereLight( 0xffffbb, 0x080820, 1 );
     // this.scene.add( this.hemisphere_light );
 
-    this.ambientlight = new AmbientLight(0xffffbb, 0.25);
+    this.ambientlight = new AmbientLight(0xffffbb, 0.20);
     this.scene.add(this.ambientlight);
 
-    this.sunlight = new DirectionalLight(0xffffbb, 0.75);
+    this.sunlight = new DirectionalLight(0xffffbb, 0.85);
     // this.sunlight.position.set(0,0, 10000);
-    this.sunlight.position.set(100, 100, 1000);
+    this.sunlight.position.set(-100, -100, 1000);
     // this.sunlight.position.set(0, 0, 100);
     this.sunlight.target.position.set(0, 0, 50);
     this.sunlight.castShadow = true;
     this.sunlight.shadow.mapSize.width = 4096;
     this.sunlight.shadow.mapSize.height = 4096;
     this.sunlight.shadow.camera.near = 2;       // default 0.5
-    this.sunlight.shadow.camera.far = 3000;      // default 500
+    this.sunlight.shadow.camera.far = 2000;      // default 500
 
     // this.sunlight.shadowCameraVisible = true;
     // this.sunlight.shadowMap.dispose();
@@ -274,6 +277,16 @@ class App extends Component {
     // this.scene.add(new DirectionalLightHelper(this.sunlight, 5));
     // this.scene.add(new CameraHelper(this.sunlight.shadow.camera));
     // this.scene.add(new AxisHelper(100));
+
+    // Add fog
+    this.scene.fog = new Fog(0xffffff, 50, 1000);
+
+    // Add lens flare: (Inspired by https://github.com/timoxley/threejs/blob/master/examples/webgl_lensflares.html)
+    // TODO: If world position is always (0,0,0), this solution is okay. Otherwise position needs to be computed for a 45 deg angle.
+    this.lensflare = new LensFlare(lensflare0, 300, 0.0, AdditiveBlending, new Color(0xffffbb));
+    this.lensflare.position.copy(new Vector3(-600, -600, 1000));
+
+    this.scene.add(this.lensflare);
   }
 
   renderFrame() {
