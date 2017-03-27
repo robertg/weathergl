@@ -4,7 +4,8 @@ import React, { Component } from 'react';
 import { WebGLRenderer, Scene, PerspectiveCamera, PlaneGeometry, BoxGeometry, MeshBasicMaterial,
   MeshLambertMaterial, Mesh, BufferGeometry, RawShaderMaterial, TextureLoader, RepeatWrapping,
   BufferAttribute, PointLight, ShaderMaterial, UniformsUtils, UniformsLib, HemisphereLight,
-  AmbientLight, DirectionalLight, VertexNormalsHelper, DirectionalLightHelper, Object3D, Color, CubeTextureLoader, Vector3, AxisHelper } from 'three';
+  AmbientLight, DirectionalLight, VertexNormalsHelper, DirectionalLightHelper, Object3D, Color,
+  CubeTextureLoader, Vector3, AxisHelper, CameraHelper, PCFSoftShadowMap } from 'three';
 import { Terrain } from './external/generator';
 import { Terra } from './external/terra';
 import TrackballControls from 'three-trackballcontrols';
@@ -35,7 +36,8 @@ class App extends Component {
     this.camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 4000);
     this.renderer = new WebGLRenderer();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    // this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = PCFSoftShadowMap;
 
     this.resize = this.resize.bind(this);
     this.initScene = this.initScene.bind(this);
@@ -48,6 +50,7 @@ class App extends Component {
 
     const self = this;
     new TextureLoader().load('heightmap.png', (ground_hmap) => {
+      // Skybox from https://reije081.home.xs4all.nl/skyboxes/
       new CubeTextureLoader().load([
         'skybox45/skyrender0002.bmp',
         'skybox45/skyrender0005.bmp',
@@ -73,7 +76,7 @@ class App extends Component {
   }
 
   initScene(ground_hmap, skybox) {
-    const fast_debug = true;
+    const fast_debug = false;
     this.camera.position.set(100, 100, 100);
     this.camera.lookAt(new Vector3(0, 0, 0));
     this.scene.add(this.camera);
@@ -92,9 +95,9 @@ class App extends Component {
     const geometry = new BoxGeometry(10, 10, 10);
     const material = new MeshLambertMaterial({ color: 0xffffff });
     this.cube = new Mesh(geometry, material);
-    // this.cube.receiveShadow = true;
-    // this.cube.castShadow = true;
-    this.cube.position.z += 30;
+    this.cube.receiveShadow = true;
+    this.cube.castShadow = true;
+    this.cube.position.z += 25;
     this.scene.add(this.cube);
 
     // const meshWidth = 100;
@@ -160,6 +163,7 @@ class App extends Component {
       });
 
       this.ground_mesh = new Mesh(ground_geo, ground_mat);
+      this.ground_mesh.receiveShadow = true;
 
       this.ground_mesh.geometry.computeFaceNormals();
       this.ground_mesh.geometry.computeVertexNormals();
@@ -181,36 +185,41 @@ class App extends Component {
     // this.hemisphere_light = new HemisphereLight( 0xffffbb, 0x080820, 1 );
     // this.scene.add( this.hemisphere_light );
 
-    // this.ambient_light = new AmbientLight(0xffffbb, 0.1);
-
-    // this.scene.add(this.ambient_light);
+    this.ambientlight = new AmbientLight(0xffffbb, 0.15);
+    this.scene.add(this.ambientlight);
 
     this.sunlight = new DirectionalLight(0xffffbb, 0.7);
     // this.sunlight.position.set(0,0, 10000);
     this.sunlight.position.set(100, 0, 1000);
-    this.sunlight.target.position.set(0, 0, 0);
+    // this.sunlight.position.set(0, 0, 100);
+    this.sunlight.target.position.set(0, 0, 50);
+    this.sunlight.castShadow = true;
+    this.sunlight.shadow.mapSize.width = 4096;
+    this.sunlight.shadow.mapSize.height = 4096;
+    this.sunlight.shadow.camera.near = 2;       // default 0.5
+    this.sunlight.shadow.camera.far = 3000;      // default 500
+
+    // this.sunlight.shadowCameraVisible = true;
+    // this.sunlight.shadowMap.dispose();
+    // this.sunlight.shadowMap = null;
+
     const target = new Object3D();
     target.position.set(0, 0, 0);
     // this.sunlight.target = target;
     // this.sunlight.target = this.camera;
     this.scene.add(this.sunlight);
     // this.scene.add(this.sunlight.target);
-    this.sunlight.shadowCameraVisible = true;
 
 
-    // DEBUG:
-    // const helper = new VertexNormalsHelper(this.ground_mesh, 2, 0x00ff00, 1);
-    // const helper2 = new DirectionalLightHelper(this.sunlight, 5);
 
-    // this.scene.add(helper);
-    // this.scene.add(helper2);
-
-    // Load Cube Map (source: https://opengameart.org/content/cloudy-skyboxes )
-
+    // Load Cube Map (source: https://reije081.home.xs4all.nl/skyboxes/ )
     this.scene.background = skybox;
 
+    // DEBUG:
+    // this.scene.add(new VertexNormalsHelper(this.ground_mesh, 2, 0x00ff00, 1));
+    // this.scene.add(new DirectionalLightHelper(this.sunlight, 5));
+    this.scene.add(new CameraHelper(this.sunlight.shadow.camera));
     this.scene.add(new AxisHelper(100));
-
   }
 
   renderFrame() {

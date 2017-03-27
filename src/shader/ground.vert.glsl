@@ -22,6 +22,13 @@ varying vec3 vPos;
 varying vec3 vNormal;
 varying vec3 vViewPosition;
 
+#ifdef USE_SHADOWMAP
+#if NUM_DIR_LIGHTS > 0
+uniform mat4 directionalShadowMatrix[ NUM_DIR_LIGHTS ];
+varying vec4 vDirectionalShadowCoord[ NUM_DIR_LIGHTS ];
+#endif
+#endif
+
 // all shaders have a main function
 void main() {
   vec3 pos = position; // + offset
@@ -38,8 +45,19 @@ void main() {
   // https://github.com/mrdoob/three.js/blob/e7dc951e829bad80c244001e6c63023e58ad8260/examples/js/ShaderTerrain.js
   vViewPosition = -(modelViewMatrix * vec4(position, 1.0)).xyz;
 
-
   gl_Position = projectionMatrix * modelViewMatrix * vec4(vec3(pos.xy, height), 1.0);
+
+  #ifdef USE_SHADOWMAP
+  #if NUM_DIR_LIGHTS > 0
+  // From https://github.com/mrdoob/three.js/blob/acdda10d5896aa10abdf33e971951dbf7bd8f074/src/renderers/shaders/ShaderChunk/shadowmap_vertex.glsl
+  vec4 worldPosition = modelMatrix * vec4(vec3(pos.xy, height), 1.0);
+  for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {
+    vDirectionalShadowCoord[ i ] = directionalShadowMatrix[ i ] * worldPosition;
+  }
+  #endif
+  #endif
+
+
 }
 
 
