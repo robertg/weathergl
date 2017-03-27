@@ -1,7 +1,10 @@
 // @flow
 
 import React, { Component } from 'react';
-import { WebGLRenderer, Scene, PerspectiveCamera, PlaneGeometry, BoxGeometry, MeshBasicMaterial, MeshLambertMaterial, Mesh, BufferGeometry, RawShaderMaterial, TextureLoader, RepeatWrapping, BufferAttribute, PointLight, ShaderMaterial, UniformsUtils, UniformsLib, HemisphereLight, AmbientLight, DirectionalLight, VertexNormalsHelper, DirectionalLightHelper, Object3D, Color } from 'three';
+import { WebGLRenderer, Scene, PerspectiveCamera, PlaneGeometry, BoxGeometry, MeshBasicMaterial,
+  MeshLambertMaterial, Mesh, BufferGeometry, RawShaderMaterial, TextureLoader, RepeatWrapping,
+  BufferAttribute, PointLight, ShaderMaterial, UniformsUtils, UniformsLib, HemisphereLight,
+  AmbientLight, DirectionalLight, VertexNormalsHelper, DirectionalLightHelper, Object3D, Color, CubeTextureLoader, Vector3, AxisHelper } from 'three';
 import { Terrain } from './external/generator';
 import { Terra } from './external/terra';
 import TrackballControls from 'three-trackballcontrols';
@@ -45,8 +48,17 @@ class App extends Component {
 
     const self = this;
     new TextureLoader().load('heightmap.png', (ground_hmap) => {
-      self.initScene(ground_hmap);
-      self.renderFrame();
+      new CubeTextureLoader().load([
+        'skybox45/skyrender0002.bmp',
+        'skybox45/skyrender0005.bmp',
+        'skybox45/skyrender0004.bmp',
+        'skybox45/skyrender0001.bmp',
+        'skybox45/skyrender0003.bmp',
+        'skybox45/skyrender0003.bmp',
+        ], (skybox) => {
+          self.initScene(ground_hmap, skybox);
+          self.renderFrame();
+      });
     });
   }
 
@@ -60,8 +72,10 @@ class App extends Component {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
-  initScene(ground_hmap) {
-    this.camera.position.z = 100;
+  initScene(ground_hmap, skybox) {
+    const fast_debug = true;
+    this.camera.position.set(100, 100, 100);
+    this.camera.lookAt(new Vector3(0, 0, 0));
     this.scene.add(this.camera);
 
     // debug
@@ -117,48 +131,51 @@ class App extends Component {
     const yCellCount = xCellCount;
     const cellSize = groundHmapSize / xCellCount;
 
-    const hf = heightfield.create(ground_hmap.image, cellSize, -1, 20);
-    console.log(hf);
+    if(!fast_debug) {
+      const hf = heightfield.create(ground_hmap.image, cellSize, -1, 20);
+      console.log(hf);
 
-    // Construct a terrain mesh just like spacejack/terra:
-    const vtxBufs = Terra.createVtxBuffers(cellSize, hf.xCount + 1, hf.yCount + 1);
-    const idBuf = Terra.createIdBuffer(hf.xCount + 1, hf.yCount + 1);
-    ground_geo.addAttribute('position', new BufferAttribute(vtxBufs.position, 3));
-    ground_geo.addAttribute('uv', new BufferAttribute(vtxBufs.uv, 2));
-    ground_geo.setIndex(new BufferAttribute(idBuf, 1));
+      // Construct a terrain mesh just like spacejack/terra:
+      const vtxBufs = Terra.createVtxBuffers(cellSize, hf.xCount + 1, hf.yCount + 1);
+      const idBuf = Terra.createIdBuffer(hf.xCount + 1, hf.yCount + 1);
+      ground_geo.addAttribute('position', new BufferAttribute(vtxBufs.position, 3));
+      ground_geo.addAttribute('uv', new BufferAttribute(vtxBufs.uv, 2));
+      ground_geo.setIndex(new BufferAttribute(idBuf, 1));
 
-    // https://github.com/mrdoob/three.js/wiki/Uniforms-types
-    // Add constants required for shaders
-    const uniforms = UniformsUtils.merge([
-      UniformsLib.lights, {
-        hmap: { type: 't', value: null },
-        hmap_scale: { type: '3f', value: [1.0 / groundHmapSize, 1.0 / groundHmapSize, 30] },
-      }]);
-    uniforms.hmap.value = ground_hmap; // Assign hmap image (cause UniformsUtils.merge calls clone())
+      // https://github.com/mrdoob/three.js/wiki/Uniforms-types
+      // Add constants required for shaders
+      const uniforms = UniformsUtils.merge([
+        UniformsLib.lights, {
+          hmap: { type: 't', value: null },
+          hmap_scale: { type: '3f', value: [1.0 / groundHmapSize, 1.0 / groundHmapSize, 30] },
+        }]);
+      uniforms.hmap.value = ground_hmap; // Assign hmap image (cause UniformsUtils.merge calls clone())
 
 
-    const ground_mat = new ShaderMaterial({
-      uniforms,
-      vertexShader: ground_vert,
-      fragmentShader: ground_frag,
-      lights: true,
-    });
+      const ground_mat = new ShaderMaterial({
+        uniforms,
+        vertexShader: ground_vert,
+        fragmentShader: ground_frag,
+        lights: true,
+      });
 
-    this.ground_mesh = new Mesh(ground_geo, ground_mat);
+      this.ground_mesh = new Mesh(ground_geo, ground_mat);
 
-    this.ground_mesh.geometry.computeFaceNormals();
-    this.ground_mesh.geometry.computeVertexNormals();
-    console.log(this.ground_mesh.geometry);
-    this.ground_mesh.geometry.attributes.normal.array = hf.vtxNormals;
+      this.ground_mesh.geometry.computeFaceNormals();
+      this.ground_mesh.geometry.computeVertexNormals();
+      console.log(this.ground_mesh.geometry);
 
-    console.log(this.ground_mesh.geometry);
+      // TODO: Cache this, maybe load it from JSON? Or localstorage?
+      this.ground_mesh.geometry.attributes.normal.array = hf.vtxNormals;
 
-    // this.ground_mesh.rotation.x = -0.5 * Math.PI;
+      console.log(this.ground_mesh.geometry);
 
-    // this.ground_mesh.receiveShadow = true;
-    // this.ground_mesh.castShadow = true;
-    this.scene.add(this.ground_mesh);
+      // this.ground_mesh.rotation.x = -0.5 * Math.PI;
 
+      // this.ground_mesh.receiveShadow = true;
+      // this.ground_mesh.castShadow = true;
+      this.scene.add(this.ground_mesh);
+    }
 
     // http://blog.cjgammon.com/threejs-lights-cameras
     // this.hemisphere_light = new HemisphereLight( 0xffffbb, 0x080820, 1 );
@@ -182,13 +199,18 @@ class App extends Component {
 
 
     // DEBUG:
-    const helper = new VertexNormalsHelper(this.ground_mesh, 2, 0x00ff00, 1);
-    const helper2 = new DirectionalLightHelper(this.sunlight, 5);
+    // const helper = new VertexNormalsHelper(this.ground_mesh, 2, 0x00ff00, 1);
+    // const helper2 = new DirectionalLightHelper(this.sunlight, 5);
 
     // this.scene.add(helper);
     // this.scene.add(helper2);
 
-    this.scene.background = new Color('skyblue');
+    // Load Cube Map (source: https://opengameart.org/content/cloudy-skyboxes )
+
+    this.scene.background = skybox;
+
+    this.scene.add(new AxisHelper(100));
+
   }
 
   renderFrame() {

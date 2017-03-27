@@ -61,6 +61,10 @@
 ## Skybox:
  - http://www.custommapmakers.org/skyboxes.php
  - Use CubeTextureLoader.
+ - Source: https://reije081.home.xs4all.nl/skyboxes/
+
+## Particle Systems (Inspiration)
+ - https://stemkoski.github.io/Three.js/Particle-Engine.html
 
 - Foreground has detailed terrain generation (likely fixed heightmap)
 - Mountainous Background is generated

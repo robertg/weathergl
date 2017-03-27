@@ -1,0 +1,7 @@
+ - https://opengameart.org/content/cloudy-skyboxes
+   - Attribution 3.0 Unported
+   - https://creativecommons.org/licenses/by/3.0/
+ - https://github.com/spacejack/terra
+   - LICENSE: MIT
+   - Copyright (c) 2016 by Mike Linkovich
+ - https://csantosbh.wordpress.com/2014/01/09/custom-shaders-with-three-js-uniforms-textures-and-lighting/
