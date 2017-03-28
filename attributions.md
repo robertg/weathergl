@@ -9,3 +9,4 @@
  - Rock Texture: http://www.virtual-lands-3d.com/textures.html
  - Lens flare Textures from: https://github.com/timoxley/threejs/tree/master/examples/textures/lensflare
    - http://opengameart.org/content/lens-flares-and-particles
+ - Rain from: https://solusipse.net/varia/threejs-examples/realistic-rain/

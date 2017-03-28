@@ -6,7 +6,7 @@ import { WebGLRenderer, Scene, PerspectiveCamera, PlaneGeometry, BoxGeometry, Me
   BufferAttribute, PointLight, ShaderMaterial, UniformsUtils, UniformsLib, HemisphereLight,
   AmbientLight, DirectionalLight, VertexNormalsHelper, DirectionalLightHelper, Object3D, Color,
   CubeTextureLoader, Vector3, AxisHelper, CameraHelper, PCFSoftShadowMap, Vector4,
-  Fog, LensFlare, AdditiveBlending } from 'three';
+  Fog, LensFlare, AdditiveBlending, Points } from 'three';
 import { Terrain } from './external/generator';
 import { Terra } from './external/terra';
 import TrackballControls from 'three-trackballcontrols';
@@ -22,6 +22,8 @@ import 'react-select/dist/react-select.css';
 /* eslint-disable */
 import ground_vert from '!!raw!./shader/ground.vert.glsl';
 import ground_frag from '!!raw!./shader/ground.frag.glsl';
+import particle_vert from '!!raw!./shader/particle.vert.glsl';
+import particle_frag from '!!raw!./shader/particle.frag.glsl';
 /* eslint-enable */
 
 class App extends Component {
@@ -78,7 +80,7 @@ class App extends Component {
     window.addEventListener('resize', this.resize);
 
     const self = this;
-    // ground_hmap generated with http://cpetry.github.io/TextureGenerator-Online/
+
     //
       // Skybox from https://reije081.home.xs4all.nl/skyboxes/
     new CubeTextureLoader().load([
@@ -89,9 +91,9 @@ class App extends Component {
       'skybox45/skyrender0003.bmp',
       'skybox45/skyrender0003.bmp',
     ], (skybox) => {
-          // Loading inspired by: http://stackoverflow.com/a/39136667
-
+      // Loading inspired by: http://stackoverflow.com/a/39136667
       const assets = [
+              // ground_hmap generated with http://cpetry.github.io/TextureGenerator-Online/
               { name: 'ground_hmap', url: 'heightmap2.png' },
               // Grass texture from http://trutextures.blogspot.ca/2013/01/free-seamless-tiling-dead-grass-terrain.html
               { name: 'grass_texture', url: 'grass/texture.jpg' },
@@ -100,6 +102,7 @@ class App extends Component {
               { name: 'rock_texture', url: 'rock2/texture.jpg' },
               { name: 'rock_bumpmap', url: 'rock2/bumpmap.jpg' },
               { name: 'lensflare0', url: 'lensflare/lensflare0.png' },
+              // Rain textures from: https://solusipse.net/varia/threejs-examples/realistic-rain/
               { name: 'rain1', url: 'rain/rain1.png' },
               { name: 'rain2', url: 'rain/rain2.png' },
               { name: 'rain3', url: 'rain/rain3.png' },
@@ -327,7 +330,48 @@ class App extends Component {
     this.scene.add(this.lensflare);
 
     // Add rain:
-    // https://github.com/mrdoob/three.js/blob/dev/examples/webgl_nearestneighbour.html
+    this.initRain(rain_textures);
+  }
+
+  initRain(rain_textures) {
+    // Inspired by: https://github.com/mrdoob/three.js/blob/dev/examples/webgl_nearestneighbour.html
+    for(let tex of rain_textures) {
+      tex.flipY = false;
+    }
+
+    let amountOfParticles = 500000;
+
+    let pointShaderMaterial = new ShaderMaterial( {
+      uniforms: {
+        tex: { value: rain_textures[0] },
+        zoom: { value: 9.0 }
+      },
+      vertexShader:   particle_vert,
+      fragmentShader: particle_frag,
+      transparent: true,
+      blending: AdditiveBlending
+    });
+
+    let positions = new Float32Array( amountOfParticles * 3 );
+    let alphas = new Float32Array( amountOfParticles );
+    let _particleGeom = new BufferGeometry();
+    _particleGeom.addAttribute( 'position', new BufferAttribute( positions, 3 ) );
+    _particleGeom.addAttribute( 'alpha', new BufferAttribute( alphas, 1 ) );
+
+    let particles = new Points( _particleGeom, pointShaderMaterial );
+    for (var x = 0; x < amountOfParticles; x++) {
+      positions[ x * 3 + 0 ] = Math.random() * 1000 - Math.random() * 1000;
+      positions[ x * 3 + 1 ] = Math.random() * 1000 - Math.random() * 1000;
+      positions[ x * 3 + 2 ] = Math.random() * 1000; // - Math.random() * 1000;
+      alphas[x] = 1.0;
+    }
+
+    this.scene.add(particles);
+  }
+
+  animateRain() {
+    if (this.state.selectedWeather.value === 2) { // Check if rainy weather is enabled.
+    }
   }
 
   renderFrame() {
