@@ -16,6 +16,8 @@ import Stats from 'stats.js';
 import './App.css';
 import { scaleRotate as Menu } from 'react-burger-menu';
 import Toggle from 'react-toggle';
+import Select from 'react-select';
+import 'react-select/dist/react-select.css';
 
 /* eslint-disable */
 import ground_vert from '!!raw!./shader/ground.vert.glsl';
@@ -38,7 +40,7 @@ class App extends Component {
 
     this.scene = new Scene();
     this.camera = new PerspectiveCamera(75, document.body.clientWidth / document.body.clientHeight, 0.1, 2000);
-    this.renderer = new WebGLRenderer({antialias: true, alpha: true});
+    this.renderer = new WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setSize(document.body.clientWidth, document.body.clientHeight);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
@@ -51,12 +53,24 @@ class App extends Component {
     this.stats.showPanel(0);
     this.stats.dom.style.left = null;
     this.stats.dom.style.right = 0;
-    this.stats.dom.style.visibility = "hidden"; // or "visible"
+    this.stats.dom.style.visibility = 'hidden'; // or "visible"
     document.body.appendChild(this.stats.dom);
 
     this.state = {
-      debug: false
+      debug: false,
+      weatherOptions: [
+        { value: 1, label: 'Clear Weather', clearableValue: false },
+        { value: 2, label: 'Rainy Weather', clearableValue: false },
+        { value: 3, label: 'Snowy Weather', clearableValue: false },
+      ],
+      timeOptions: [
+        { value: 4, label: 'Day Time', clearableValue: false },
+        { value: 5, label: 'Night Time', clearableValue: false },
+      ],
     };
+
+    this.state.selectedWeather = this.state.weatherOptions[0];
+    this.state.selectedTime = this.state.timeOptions[0];
   }
 
   componentDidMount() {
@@ -65,31 +79,52 @@ class App extends Component {
 
     const self = this;
     // ground_hmap generated with http://cpetry.github.io/TextureGenerator-Online/
-    new TextureLoader().load('heightmap2.png', (ground_hmap) => {
+    //
       // Skybox from https://reije081.home.xs4all.nl/skyboxes/
-      new CubeTextureLoader().load([
-        'skybox45/skyrender0002.bmp',
-        'skybox45/skyrender0005.bmp',
-        'skybox45/skyrender0004.bmp',
-        'skybox45/skyrender0001.bmp',
-        'skybox45/skyrender0003.bmp',
-        'skybox45/skyrender0003.bmp',
-        ], (skybox) => {
-          // Grass texture from http://trutextures.blogspot.ca/2013/01/free-seamless-tiling-dead-grass-terrain.html
-          new TextureLoader().load('grass/texture.jpg', (grass_texture) => {
-            new TextureLoader().load('grass/bumpmap.jpg', (grass_bumpmap) => {
-              // Rock texture from http://www.virtual-lands-3d.com/textures.html
-              new TextureLoader().load('rock2/texture.jpg', (rock_texture) => {
-                new TextureLoader().load('rock2/bumpmap.jpg', (rock_bumpmap) => {
-                  new TextureLoader().load('lensflare/lensflare0.png', (lensflare0) => {
-                    self.initScene(ground_hmap, skybox, grass_texture, grass_bumpmap, rock_texture, rock_bumpmap, lensflare0);
-                    self.renderFrame();
-                  });
-                });
-              });
-            });
-          });
+    new CubeTextureLoader().load([
+      'skybox45/skyrender0002.bmp',
+      'skybox45/skyrender0005.bmp',
+      'skybox45/skyrender0004.bmp',
+      'skybox45/skyrender0001.bmp',
+      'skybox45/skyrender0003.bmp',
+      'skybox45/skyrender0003.bmp',
+    ], (skybox) => {
+          // Loading inspired by: http://stackoverflow.com/a/39136667
+
+      const assets = [
+              { name: 'ground_hmap', url: 'heightmap2.png' },
+              // Grass texture from http://trutextures.blogspot.ca/2013/01/free-seamless-tiling-dead-grass-terrain.html
+              { name: 'grass_texture', url: 'grass/texture.jpg' },
+              { name: 'grass_bumpmap', url: 'grass/bumpmap.jpg' },
+              // // Rock texture from http://www.virtual-lands-3d.com/textures.htm
+              { name: 'rock_texture', url: 'rock2/texture.jpg' },
+              { name: 'rock_bumpmap', url: 'rock2/bumpmap.jpg' },
+              { name: 'lensflare0', url: 'lensflare/lensflare0.png' },
+              { name: 'rain1', url: 'rain/rain1.png' },
+              { name: 'rain2', url: 'rain/rain2.png' },
+              { name: 'rain3', url: 'rain/rain3.png' },
+              { name: 'rain4', url: 'rain/rain4.png' },
+              { name: 'rain5', url: 'rain/rain5.png' },
+      ];
+
+      const textures = {};
+
+      for (const img of assets) {
+        new TextureLoader().load(img.url, (texture) => {
+          textures[img.name] = texture;
+          assets.splice(assets.indexOf(img), 1);
+          console.log('[TextureLoader] Loaded %o', img.name);
+          if (!assets.length) {
+            self.initScene(
+                  textures.ground_hmap, skybox, textures.grass_texture,
+                  textures.grass_bumpmap, textures.rock_texture, textures.rock_bumpmap,
+                  textures.lensflare0,
+                  [textures.rain1, textures.rain2, textures.rain3, textures.rain4, textures.rain5],
+                );
+            self.renderFrame();
+          }
         });
+      }
     });
   }
 
@@ -103,7 +138,7 @@ class App extends Component {
     this.renderer.setSize(document.body.clientWidth, document.body.clientHeight);
   }
 
-  initScene(ground_hmap, skybox, grass_texture, grass_bumpmap, rock_texture, rock_bumpmap, lensflare0) {
+  initScene(ground_hmap, skybox, grass_texture, grass_bumpmap, rock_texture, rock_bumpmap, lensflare0, rain_textures) {
     const fast_debug = false;
     this.camera.position.set(100, 0, 100);
     this.camera.lookAt(new Vector3(0, 0, 0));
@@ -176,8 +211,8 @@ class App extends Component {
     // const yCellCount = 2048;
     const cellSize = groundHmapSize / ground_hmap.image.width;
 
-    if(!fast_debug) {
-      let maxHeight = 40;
+    if (!fast_debug) {
+      const maxHeight = 40;
       const hf = heightfield.create(ground_hmap.image, cellSize, 0, maxHeight);
       console.log(hf);
 
@@ -197,8 +232,8 @@ class App extends Component {
           grass_bumpmap: { type: 't', value: null },
           rock_texture: { type: 't', value: null },
           rock_bumpmap: { type: 't', value: null },
-          offsetRepeat: { value: new Vector4( 0, 0, 1, 1 ) },
-          max_height: {type: 'f', value: maxHeight},
+          offsetRepeat: { value: new Vector4(0, 0, 1, 1) },
+          max_height: { type: 'f', value: maxHeight },
           hmap_scale: { type: '3f', value: [1.0 / groundHmapSize, 1.0 / groundHmapSize, maxHeight] },
         }]);
 
@@ -272,7 +307,6 @@ class App extends Component {
     // this.scene.add(this.sunlight.target);
 
 
-
     // Load Cube Map (source: https://reije081.home.xs4all.nl/skyboxes/ )
     this.scene.background = skybox;
 
@@ -291,12 +325,15 @@ class App extends Component {
     this.lensflare.position.copy(new Vector3(-600, -600, 1000));
 
     this.scene.add(this.lensflare);
+
+    // Add rain:
+    // https://github.com/mrdoob/three.js/blob/dev/examples/webgl_nearestneighbour.html
   }
 
   renderFrame() {
     requestAnimationFrame(this.renderFrame);
 
-    if(this.state.debug) {
+    if (this.state.debug) {
       this.stats.begin();
     }
 
@@ -308,38 +345,60 @@ class App extends Component {
 
     this.renderer.render(this.scene, this.camera);
 
-    if(this.state.debug) {
+    if (this.state.debug) {
       this.stats.end();
     }
   }
 
   handleDebugChange(e) {
     this.state.debug = e.target.checked;
-    if(this.state.debug) {
-      this.stats.dom.style.visibility = "visible";
+    if (this.state.debug) {
+      this.stats.dom.style.visibility = 'visible';
     } else {
-      this.stats.dom.style.visibility = "hidden";
+      this.stats.dom.style.visibility = 'hidden';
     }
+  }
+
+  handleWeatherOptionsChange(selected) {
+    this.setState({ selectedWeather: selected });
+  }
+
+  handleTimeOptionsChange(selected) {
+    this.setState({ selectedTime: selected });
   }
 
   render() {
     return (
       <div id="outer-container">
-        <Menu pageWrapId={ "page-wrap" } outerContainerId={ "outer-container" }>
+        <Menu pageWrapId={'page-wrap'} outerContainerId={'outer-container'}>
           <h1>WeatherGL</h1>
           <div>
-          <p className="wgl-author">By: Robert Gawdzik</p>
+            <p className="wgl-author">By: Robert Gawdzik</p>
+          </div>
+          <div className="menu-item">
+            <Select
+              clearable={false}
+              value={this.state.selectedWeather}
+              options={this.state.weatherOptions}
+              onChange={this.handleWeatherOptionsChange.bind(this)}
+            />
+          </div>
+          <div className="menu-item">
+            <Select
+              clearable={false}
+              value={this.state.selectedTime}
+              options={this.state.timeOptions}
+              onChange={this.handleTimeOptionsChange.bind(this)}
+            />
           </div>
           <div className="menu-item">
             <label>
               <Toggle
-              defaultChecked={this.state.debug}
-              onChange={this.handleDebugChange.bind(this)} />
+                defaultChecked={this.state.debug}
+                onChange={this.handleDebugChange.bind(this)}
+              />
               <span className="label-text">Debug Mode</span>
             </label>
-          </div>
-          <div className="menu-item">
-            <span>Another Item</span>
           </div>
         </Menu>
 

@@ -77,6 +77,8 @@ WeatherGL is a React project which requires a javascript development requirement
  - https://aerotwist.com/tutorials/creating-particles-with-three-js/
  - https://threejs.org/docs/?q=Point#Reference/Materials/PointsMaterial
   - Kinda related for starry night: https://threejs.org/docs/?q=Point#Reference/Lights/PointLight
+ - https://solusipse.net/varia/threejs-examples/realistic-rain/
+ - https://threejs.org/examples/webgl_nearestneighbour.html
 
 ## Lens Flare
  - https://github.com/timoxley/threejs/blob/master/examples/webgl_lensflares.html

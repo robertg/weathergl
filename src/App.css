@@ -1,8 +1,19 @@
+/*
+Contains CSS from:
+ - https://github.com/negomi/react-burger-menu
+ - https://github.com/aaronshaf/react-toggle
+*/
+
 html, body {
   height: 100%;
   width: 100%;
   margin: 0px;
   overflow: hidden;
+}
+
+.wgl-author {
+  margin-top: -10px;
+  margin-bottom: 30px;
 }
 
 .App {
@@ -240,17 +251,4 @@ label {
   font-weight: normal;
   margin-bottom: 0;
   margin-left: 10px;
-}
-
-.wgl-author {
-  margin-top: -10px;
-  margin-bottom: 30px;
-}
-
-.outer-container {
-
-}
-
-.page-wrap {
-
 }
