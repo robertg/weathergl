@@ -14,6 +14,8 @@ import { OrbitControls } from './external/orbitcontrols';
 import * as heightfield from './external/heightfield';
 import Stats from 'stats.js';
 import './App.css';
+import { scaleRotate as Menu } from 'react-burger-menu';
+import Toggle from 'react-toggle';
 
 /* eslint-disable */
 import ground_vert from '!!raw!./shader/ground.vert.glsl';
@@ -35,9 +37,9 @@ class App extends Component {
     super();
 
     this.scene = new Scene();
-    this.camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+    this.camera = new PerspectiveCamera(75, document.body.clientWidth / document.body.clientHeight, 0.1, 2000);
     this.renderer = new WebGLRenderer({antialias: true, alpha: true});
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setSize(document.body.clientWidth, document.body.clientHeight);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
 
@@ -45,14 +47,16 @@ class App extends Component {
     this.initScene = this.initScene.bind(this);
     this.renderFrame = this.renderFrame.bind(this);
 
-    this.debug = true;
+    this.stats = new Stats();
+    this.stats.showPanel(0);
+    this.stats.dom.style.left = null;
+    this.stats.dom.style.right = 0;
+    this.stats.dom.style.visibility = "hidden"; // or "visible"
+    document.body.appendChild(this.stats.dom);
 
-    if(this.debug) {
-      this.stats = new Stats();
-      this.stats.showPanel(0);
-
-      document.body.appendChild(this.stats.dom);
-    }
+    this.state = {
+      debug: false
+    };
   }
 
   componentDidMount() {
@@ -94,9 +98,9 @@ class App extends Component {
   }
 
   resize() {
-    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.aspect = document.body.clientWidth / document.body.clientHeight;
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setSize(document.body.clientWidth, document.body.clientHeight);
   }
 
   initScene(ground_hmap, skybox, grass_texture, grass_bumpmap, rock_texture, rock_bumpmap, lensflare0) {
@@ -292,7 +296,7 @@ class App extends Component {
   renderFrame() {
     requestAnimationFrame(this.renderFrame);
 
-    if(this.debug) {
+    if(this.state.debug) {
       this.stats.begin();
     }
 
@@ -304,14 +308,43 @@ class App extends Component {
 
     this.renderer.render(this.scene, this.camera);
 
-    if(this.debug) {
+    if(this.state.debug) {
       this.stats.end();
+    }
+  }
+
+  handleDebugChange(e) {
+    this.state.debug = e.target.checked;
+    if(this.state.debug) {
+      this.stats.dom.style.visibility = "visible";
+    } else {
+      this.stats.dom.style.visibility = "hidden";
     }
   }
 
   render() {
     return (
-      <div ref={(node) => { this.node = node; }} className="App" />
+      <div id="outer-container">
+        <Menu pageWrapId={ "page-wrap" } outerContainerId={ "outer-container" }>
+          <h1>WeatherGL</h1>
+          <div>
+          <p className="wgl-author">By: Robert Gawdzik</p>
+          </div>
+          <div className="menu-item">
+            <label>
+              <Toggle
+              defaultChecked={this.state.debug}
+              onChange={this.handleDebugChange.bind(this)} />
+              <span className="label-text">Debug Mode</span>
+            </label>
+          </div>
+          <div className="menu-item">
+            <span>Another Item</span>
+          </div>
+        </Menu>
+
+        <div id="page-wrap" ref={(node) => { this.node = node; }} className="App" />
+      </div>
     );
   }
 }

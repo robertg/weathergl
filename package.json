@@ -6,7 +6,9 @@
   "dependencies": {
     "raw-loader": "^0.5.1",
     "react": "^15.4.2",
+    "react-burger-menu": "^1.10.14",
     "react-dom": "^15.4.2",
+    "react-toggle": "^3.0.1",
     "stats.js": "^0.17.0",
     "three": "^0.84.0",
     "three-trackballcontrols": "0.0.5"
