@@ -382,7 +382,7 @@ class App extends Component {
       blending: AdditiveBlending,
     });
 
-    this.amountOfParticles = 500000;
+    this.amountOfParticles = 250000;
     this.rainParticlePositions = new Float32Array(this.amountOfParticles * 3);
     const alphas = new Float32Array(this.amountOfParticles);
     const particleGeom = new BufferGeometry();
