@@ -139,6 +139,7 @@ float getShadowMask() {
 }
 
 // perturbNormalArb derived from: https://github.com/mrdoob/three.js/blob/dev/src/renderers/shaders/ShaderChunk/bumpmap_pars_fragment.glsl
+// - http://mmikkelsen3d.blogspot.ca/2011/07/derivative-maps.html
 vec3 perturbNormalArb( vec3 surf_pos, vec3 surf_norm, vec2 dHdxy ) {
   vec3 vSigmaX = dFdx( surf_pos );
   vec3 vSigmaY = dFdy( surf_pos );

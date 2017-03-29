@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 // Vector Math with library-agnostic interface types.
 // i.e. Any object with matching property names will work,
 // whether three.js, cannon.js, etc.
@@ -93,3 +95,5 @@ Vec3.toArray = function (v: Vec3) {
 };
 
 export { Vec3 };
+
+/* eslint-enable */

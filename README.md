@@ -91,3 +91,5 @@ WeatherGL is a React project which requires a javascript development requirement
  - http://balloob.github.io/react-sidebar/example/
 
 ## Sound
+ - https://github.com/goldfire/howler.js
+   - https://www.freesound.org/people/rhodesmas/sounds/321723/

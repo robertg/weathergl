@@ -124,3 +124,6 @@ Terrain.Normalize = function(mesh, options) {
 };
 
 export { Terrain };
+
+
+/* eslint-enable */

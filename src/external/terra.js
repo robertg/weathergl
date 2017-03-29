@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 // @flow
 
 // LICENSE: MIT
@@ -73,3 +75,5 @@ Terra.createIdBuffer = function (xcount: number, ycount: number) {
 };
 
 export { Terra };
+
+/* eslint-enable */

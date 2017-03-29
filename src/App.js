@@ -7,17 +7,18 @@ import { WebGLRenderer, Scene, PerspectiveCamera, PlaneGeometry, BoxGeometry, Me
   AmbientLight, DirectionalLight, VertexNormalsHelper, DirectionalLightHelper, Object3D, Color,
   CubeTextureLoader, Vector3, AxisHelper, CameraHelper, PCFSoftShadowMap, Vector4,
   Fog, LensFlare, AdditiveBlending, Points } from 'three';
-import { Terrain } from './external/generator';
-import { Terra } from './external/terra';
-import TrackballControls from 'three-trackballcontrols';
-import { OrbitControls } from './external/orbitcontrols';
-import * as heightfield from './external/heightfield';
-import Stats from 'stats.js';
-import './App.css';
-import { scaleRotate as Menu } from 'react-burger-menu';
 import Toggle from 'react-toggle';
 import Select from 'react-select';
+import Stats from 'stats.js';
+import TrackballControls from 'three-trackballcontrols';
+import { scaleRotate as Menu } from 'react-burger-menu';
+import { Howl } from 'howler';
+import { Terrain } from './external/generator';
+import { Terra } from './external/terra';
+import { OrbitControls } from './external/orbitcontrols';
+import * as heightfield from './external/heightfield';
 import 'react-select/dist/react-select.css';
+import './App.css';
 
 /* eslint-disable */
 import ground_vert from '!!raw!./shader/ground.vert.glsl';
@@ -109,7 +110,7 @@ class App extends Component {
               { name: 'rain4', url: 'rain/rain4.png' },
               { name: 'rain5', url: 'rain/rain5.png' },
               // Snow textures from: http://oos.moxiecode.com/js_webgl/snowfall/
-              { name: 'snow1', url: 'snow/snowflake1.png'},
+              { name: 'snow1', url: 'snow/snowflake1.png' },
       ];
 
       const textures = {};
@@ -303,7 +304,7 @@ class App extends Component {
 
     this.scene.add(this.lensflare);
 
-    // Setup weather
+    // Set up weather
     this.rain_textures = rain_textures;
     this.snow_textures = snow_textures;
 
@@ -311,6 +312,32 @@ class App extends Component {
     this.initRain(this.rain_textures);
     this.initSnow(this.snow_textures);
 
+    // Set up sound
+
+    // https://www.freesound.org/people/rhodesmas/sounds/321723/
+    // Ambient background sound should always play
+    this.backgroundSound = new Howl({
+      src: ['sound/background.wav'],
+      loop: true,
+      volume: 0,
+    });
+    this.backgroundSoundId = this.backgroundSound.play();
+    // Start playing it
+    this.backgroundSound.fade(0, 1, 1000);
+
+    this.rainSound = new Howl({
+      src: ['sound/rain.wav'],
+      loop: true,
+      volume: 0,
+    });
+    this.rainSound.play();
+
+    this.snowSound = new Howl({
+      src: ['sound/snow.wav'],
+      loop: true,
+      volume: 0,
+    });
+    this.snowSound.play();
 
     // DEBUG:
     // this.scene.add(new VertexNormalsHelper(this.ground_mesh, 2, 0x00ff00, 1));
@@ -321,7 +348,7 @@ class App extends Component {
 
   initClear() {
     if (this.state.selectedWeather.value !== 1) { // Check if clear weather is enabled.
-      return;
+
     }
   }
 
@@ -339,7 +366,7 @@ class App extends Component {
       uniforms: {
         tex: { value: rain_textures[0] },
         size: { value: 4.0 },
-        rain: { value: true}
+        rain: { value: true },
       },
       vertexShader: particle_vert,
       fragmentShader: particle_frag,
@@ -354,7 +381,7 @@ class App extends Component {
     particleGeom.addAttribute('position', new BufferAttribute(this.rainParticlePositions, 3));
 
     this.rainParticles = new Points(particleGeom, pointShaderMaterial);
-    this.rainParticles.name = "rainParticles";
+    this.rainParticles.name = 'rainParticles';
     for (let x = 0; x < this.amountOfParticles; x++) {
       this.rainParticlePositions[x * 3 + 0] = Math.random() * 1000 - Math.random() * 1000;
       this.rainParticlePositions[x * 3 + 1] = Math.random() * 1000 - Math.random() * 1000;
@@ -362,12 +389,18 @@ class App extends Component {
     }
 
     this.scene.add(this.rainParticles);
+
+    // Add rain background sound
+    this.rainSound.fade(0, 1, 1000);
   }
 
   removeRain() {
-    if(this.rainParticles) {
+    if (this.rainParticles) {
       this.scene.remove(this.rainParticles);
       this.rainParticles = null;
+
+      // Fade out rain background sound
+      this.rainSound.fade(1, 0, 1000);
     }
   }
 
@@ -385,12 +418,12 @@ class App extends Component {
       uniforms: {
         tex: { value: snow_textures[0] },
         size: { value: 2.0 },
-        rain: { value: false}
+        rain: { value: false },
       },
       vertexShader: particle_vert,
       fragmentShader: particle_frag,
       transparent: true,
-      blending: AdditiveBlending
+      blending: AdditiveBlending,
     });
 
     this.amountOfParticles = 50000;
@@ -400,7 +433,7 @@ class App extends Component {
     particleGeom.addAttribute('position', new BufferAttribute(this.snowParticlePositions, 3));
 
     this.snowParticles = new Points(particleGeom, pointShaderMaterial);
-    this.snowParticles.name = "snowParticles";
+    this.snowParticles.name = 'snowParticles';
     for (let x = 0; x < this.amountOfParticles; x++) {
       this.snowParticlePositions[x * 3 + 0] = Math.random() * 1000 - Math.random() * 1000;
       this.snowParticlePositions[x * 3 + 1] = Math.random() * 1000 - Math.random() * 1000;
@@ -408,12 +441,18 @@ class App extends Component {
     }
 
     this.scene.add(this.snowParticles);
+
+    // Add snow background sound
+    this.snowSound.fade(0, 1, 1000);
   }
 
   removeSnow() {
-    if(this.snowParticles) {
+    if (this.snowParticles) {
       this.scene.remove(this.snowParticles);
       this.snowParticles = null;
+
+      // Fade out snow background sound
+      this.snowSound.fade(1, 0, 1000);
     }
   }
 
@@ -422,7 +461,7 @@ class App extends Component {
       return;
     }
 
-    if(!this.rainParticles) {
+    if (!this.rainParticles) {
       return;
     }
 
@@ -440,7 +479,7 @@ class App extends Component {
       return;
     }
 
-    if(!this.snowParticles) {
+    if (!this.snowParticles) {
       return;
     }
 
@@ -450,7 +489,7 @@ class App extends Component {
       this.snowParticlePositions[x * 3 + 2] -= (Math.abs(Math.sin(this.snowParticlePositions[x * 3 + 2]))
                                              + Math.abs(Math.cos(this.snowParticlePositions[x * 3 + 2]))) / 2.0;
 
-      if(this.snowParticlePositions[x * 3 + 2] < 0) {
+      if (this.snowParticlePositions[x * 3 + 2] < 0) {
         // Reset position
         this.snowParticlePositions[x * 3 + 2] = 1000 + Math.random() * 50;
       }

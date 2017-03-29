@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 // @flow
 // LICENSE: MIT
 // Copyright (c) 2016 by Mike Linkovich
@@ -247,3 +249,6 @@ function computeVertexNormal(hf: Heightfield, vx: number, vy: number, n: Vec3) {
 export function getPlaneZ(n: Vec3, z0: number, x: number, y: number) {
   return z0 - (n.x * x + n.y * y) / n.z;
 }
+
+
+/* eslint-enable */

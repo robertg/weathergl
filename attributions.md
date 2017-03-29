@@ -10,3 +10,8 @@
  - Lens flare Textures from: https://github.com/timoxley/threejs/tree/master/examples/textures/lensflare
    - http://opengameart.org/content/lens-flares-and-particles
  - Rain from: https://solusipse.net/varia/threejs-examples/realistic-rain/
+ - Snow from: http://oos.moxiecode.com/js_webgl/snowfall/
+ - Sound from: https://www.freesound.org
+ - Ambient Background Loop (background.wav): https://www.freesound.org/people/rhodesmas/sounds/321723/
+ - Rain Loop: https://www.freesound.org/people/klangfabrik/sounds/160699/
+ - Snow Loop: https://www.freesound.org/people/Robinhood76/sounds/175513/

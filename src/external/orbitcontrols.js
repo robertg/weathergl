@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 /**
  * @author qiao / https://github.com/qiao
  * @author mrdoob / http://mrdoob.com
@@ -861,3 +863,6 @@ Object.defineProperties(OrbitControls.prototype, {
 
 
 export { OrbitControls };
+
+
+/* eslint-enable */
