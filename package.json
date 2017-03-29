@@ -2,7 +2,7 @@
   "name": "weathergl",
   "version": "0.1.0",
   "private": true,
-  "//": "For github pages: homepage: http://robertg.github.io/weathergl",
+  "//": "For github pages: \"homepage\": \"http://robertg.github.io/weathergl\"",
   "dependencies": {
     "howler": "^2.0.3",
     "raw-loader": "^0.5.1",

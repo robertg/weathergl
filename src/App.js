@@ -561,32 +561,34 @@ class App extends Component {
       return;
     }
 
-    if ( this.controlsEnabled ) {
+    if (this.controlsEnabled) {
       // raycaster.ray.origin.copy( controls.getObject().position );
       // raycaster.ray.origin.y -= 10;
       // var intersections = raycaster.intersectObjects( objects );
       // var isOnObject = intersections.length > 0;
-      var time = performance.now();
-      var delta = ( time - this.prevTime ) / 1000;
+      const time = performance.now();
+      const delta = (time - this.prevTime) / 1000;
       this.velocity.x -= this.velocity.x * 10.0 * delta;
       this.velocity.y -= this.velocity.y * 10.0 * delta;
-      if ( this.moveForward ) {
-       this.velocity.y += 20.0 * delta;
+      if (this.moveForward) {
+        this.velocity.y += 20.0 * delta;
       }
-     if ( this.moveBackward ) {
-      this.velocity.y -= 20.0 * delta;
+      if (this.moveBackward) {
+        this.velocity.y -= 20.0 * delta;
       }
-      if ( this.moveLeft ) { this.velocity.x -= 20.0 * delta;
+      if (this.moveLeft) {
+        this.velocity.x -= 20.0 * delta;
       }
-      if ( this.moveRight ) { this.velocity.x += 20.0 * delta;
+      if (this.moveRight) {
+        this.velocity.x += 20.0 * delta;
       }
-        this.houseControls.getObject().translateX( this.velocity.x * delta );
-        this.houseControls.getObject().translateY( this.velocity.y * delta );
-        this.prevTime = time;
-      }
+      this.houseControls.getObject().translateX(this.velocity.x * delta);
+      this.houseControls.getObject().translateY(this.velocity.y * delta);
+      this.prevTime = time;
+    }
 
-      this.ground_mesh.material.uniforms.gameCameraPosition.value = this.houseControls.getObject().position;
-      this.ground_mesh.material.uniforms.gameCameraPosition.needsUpdate = true;
+    this.ground_mesh.material.uniforms.gameCameraPosition.value = this.houseControls.getObject().position;
+    this.ground_mesh.material.uniforms.gameCameraPosition.needsUpdate = true;
   }
 
   initClear() {
@@ -755,7 +757,6 @@ class App extends Component {
     this.animateSnow();
 
 
-
     this.renderer.render(this.scene, this.camera);
 
 
@@ -809,7 +810,7 @@ class App extends Component {
       return;
     }
 
-    if(!this.controlsEnabled) {
+    if (!this.controlsEnabled) {
       document.body.requestPointerLock();
     }
   }

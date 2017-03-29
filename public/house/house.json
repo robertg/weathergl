@@ -1456,7 +1456,7 @@
         "emissive": 0,
         "ambient": 7783110,
         "transparent": true,
-        "opacity": 0.5,
+        "opacity": 0.3,
         "map": "57369895-CFEE-3C7E-8195-6D9F9CEA748F",
         "uuid": "E41EBA25-0BCE-3C3A-875C-CA7AE5D3DCBA",
         "vertexColors": false,
@@ -1636,15 +1636,6 @@
             "receiveShadow": true,
             "geometry": "BA987BDC-5B1E-3FF9-85BE-2847EDD7B178"
         },{
-            "name": "Box2",
-            "uuid": "66A008AC-44C6-3B23-9275-5237B57058C0",
-            "matrix": [-1,0,0,0,0,0,1,0,0,1,0,0,0.5551,0.376,2.1588,1],
-            "visible": true,
-            "type": "Mesh",
-            "castShadow": false,
-            "receiveShadow": false,
-            "geometry": "A3266DF7-EF8B-3835-B919-F2D9B9D10D07"
-        },{
             "name": "Box20",
             "uuid": "7EFC8933-5DD0-302B-B843-5B4EB1B6AD7B",
             "matrix": [-0.0162,0,0,0,0,0,0.0176,0,0,0.5943,0,0,0.5446,0.2343,0.6816,1],
@@ -1694,16 +1685,6 @@
             "castShadow": true,
             "receiveShadow": true,
             "geometry": "1115A1C8-EBF4-37C3-BB25-69F6ED4449BA"
-        },{
-            "name": "Box3",
-            "uuid": "BF7F5BAE-ECAB-32A6-B7E6-0F0B02A66F3D",
-            "matrix": [-1,0,0,0,0,0,2.3416,0,0,1,0,0,0.0413,0.2867,0.8568,1],
-            "visible": true,
-            "type": "Mesh",
-            "material": "35815DAC-72A5-3BBC-88F1-30AE6736B2DF",
-            "castShadow": true,
-            "receiveShadow": true,
-            "geometry": "DAF26EED-E8A1-3597-94D1-E65246622C91"
         },{
             "name": "Box4",
             "uuid": "21E1EE28-720A-3F5F-A701-169B87D161B6",
@@ -1764,26 +1745,6 @@
             "castShadow": true,
             "receiveShadow": true,
             "geometry": "98CE0ABF-982E-3010-BF1D-01919C9CB4EF"
-        },{
-            "name": "Plane",
-            "uuid": "631279BD-3DB0-34E6-BE17-B19991DEF360",
-            "matrix": [-0.1862,0,0,0,0,0,0.3558,0,0,0.6296,0,0,0.1764,0.0083,0.5186,1],
-            "visible": true,
-            "type": "Mesh",
-            "material": "864C70D5-7BD1-3A85-AC43-D0229500A8DB",
-            "castShadow": true,
-            "receiveShadow": true,
-            "geometry": "FDA35051-77AC-3FCF-B642-34C990EA7344"
-        },{
-            "name": "Plane1",
-            "uuid": "D5211B8C-258D-3868-A8EA-36AE03B6C111",
-            "matrix": [-0.1862,0,0,0,0,0,0.3558,0,0,0.6296,0,0,0.1764,0.0083,-0.1634,1],
-            "visible": true,
-            "type": "Mesh",
-            "material": "864C70D5-7BD1-3A85-AC43-D0229500A8DB",
-            "castShadow": true,
-            "receiveShadow": true,
-            "geometry": "F379AE98-C06B-3C1B-9C01-43C9DBB0E829"
         },{
             "name": "sofa",
             "uuid": "97CA7F33-F65B-3398-8A9F-7C6654D73667",
