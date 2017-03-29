@@ -123,6 +123,10 @@ class App extends Component {
                 { name: 'rain5', url: 'rain/rain5.png' },
                 // Snow textures from: http://oos.moxiecode.com/js_webgl/snowfall/
                 { name: 'snow1', url: 'snow/snowflake1.png' },
+                // https://cs.uwaterloo.ca/sites/ca.computer-science/files/styles/thumbnail/public/uploads/images/Baranoski_0.jpg
+                { name: 'prof', url: 'baranoski.jpg'},
+                // https://uwaterloo.ca/president/sites/ca.president/files/resize/styles/sidebar-220px-wide/public/uploads/images/uw_president_01-w2-238x258.jpg
+                { name: 'feridun', url: 'feridun.jpg'}
         ];
 
         const textures = {};
@@ -140,6 +144,8 @@ class App extends Component {
                     [textures.rain1, textures.rain2, textures.rain3, textures.rain4, textures.rain5],
                     [textures.snow1],
                     house,
+                    textures.prof,
+                    textures.feridun
                   );
               self.renderFrame();
             }
@@ -168,7 +174,7 @@ class App extends Component {
   }
 
   initScene(ground_hmap, skybox, grass_texture, grass_bumpmap,
-    rock_texture, rock_bumpmap, lensflare0, rain_textures, snow_textures, house) {
+    rock_texture, rock_bumpmap, lensflare0, rain_textures, snow_textures, house, prof, feridun) {
     const fast_debug = false;
 
     this.scene.add(this.camera);
@@ -204,7 +210,6 @@ class App extends Component {
     if (!fast_debug) {
       const maxHeight = 40;
       const hf = heightfield.create(ground_hmap.image, cellSize, 0, maxHeight);
-      console.log(hf);
 
       // Construct a terrain mesh just like spacejack/terra:
       const vtxBufs = Terra.createVtxBuffers(cellSize, hf.xCount + 1, hf.yCount + 1);
@@ -363,6 +368,22 @@ class App extends Component {
       [393.289, 408.596],
       [401.382, 400.409],
     ];
+
+    // Add prof to house.
+    let profMaterial = new MeshLambertMaterial({map : prof});
+    let profPlane = new Mesh(new PlaneGeometry(67.0 / 64.0, 100.0 / 64.0), profMaterial);
+    profPlane.rotateX(Math.PI / 2.0);
+    profPlane.rotateY(Math.PI / 4.575);
+    profPlane.position.set(391.8, 407.2, 20);
+    this.scene.add(profPlane);
+
+
+    let feridunMaterial = new MeshLambertMaterial({map : feridun});
+    let feridunPlane = new Mesh(new PlaneGeometry(238.0 / 256.0 * 1.5, 258.0 / 256.0 * 1.5), feridunMaterial);
+    feridunPlane.rotateX(Math.PI / 2.0);
+    feridunPlane.rotateY(Math.PI / 4.575);
+    feridunPlane.position.set(390.8, 406.2, 20);
+    this.scene.add(feridunPlane);
 
     // DEBUG:
     // this.scene.add(new VertexNormalsHelper(this.ground_mesh, 2, 0x00ff00, 1));
@@ -582,8 +603,6 @@ class App extends Component {
       }
 
       this.prevTime = time;
-
-      console.log(this.houseControls.getObject().position);
     }
 
     this.ground_mesh.material.uniforms.gameCameraPosition.value = this.houseControls.getObject().position;
@@ -608,7 +627,7 @@ class App extends Component {
     const pointShaderMaterial = new ShaderMaterial({
       uniforms: {
         tex: { value: rain_textures[0] },
-        size: { value: 4.0 },
+        size: { value: 1.0 },
         rain: { value: true },
       },
       vertexShader: particle_vert,
@@ -617,7 +636,7 @@ class App extends Component {
       blending: AdditiveBlending,
     });
 
-    this.amountOfParticles = 250000;
+    this.amountOfParticles = 200000;
     this.rainParticlePositions = new Float32Array(this.amountOfParticles * 3);
     const alphas = new Float32Array(this.amountOfParticles);
     const particleGeom = new BufferGeometry();
@@ -660,7 +679,7 @@ class App extends Component {
     const pointShaderMaterial = new ShaderMaterial({
       uniforms: {
         tex: { value: snow_textures[0] },
-        size: { value: 2.0 },
+        size: { value: 1.0 },
         rain: { value: false },
       },
       vertexShader: particle_vert,
@@ -712,6 +731,10 @@ class App extends Component {
       this.rainParticlePositions[x * 3 + 0] = Math.random() * 1000 - Math.random() * 1000;
       this.rainParticlePositions[x * 3 + 1] = Math.random() * 1000 - Math.random() * 1000;
       this.rainParticlePositions[x * 3 + 2] = Math.random() * 1000;
+
+      if(inside([this.rainParticlePositions[x * 3 + 0], this.rainParticlePositions[x * 3 + 1]], this.houseBounds)) {
+        this.rainParticlePositions[x * 3 + 2] = 100 + Math.random() * 1000;
+      }
     }
 
     this.rainParticles.geometry.attributes.position.needsUpdate = true;
@@ -732,7 +755,8 @@ class App extends Component {
       this.snowParticlePositions[x * 3 + 2] -= (Math.abs(Math.sin(this.snowParticlePositions[x * 3 + 2]))
                                              + Math.abs(Math.cos(this.snowParticlePositions[x * 3 + 2]))) / 2.0;
 
-      if (this.snowParticlePositions[x * 3 + 2] < 0) {
+      if (this.snowParticlePositions[x * 3 + 2] < 0
+        || inside([this.snowParticlePositions[x * 3 + 0], this.snowParticlePositions[x * 3 + 1]], this.houseBounds)) {
         // Reset position
         this.snowParticlePositions[x * 3 + 2] = 1000 + Math.random() * 50;
       }
