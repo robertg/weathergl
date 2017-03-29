@@ -6,7 +6,7 @@ import { WebGLRenderer, Scene, PerspectiveCamera, PlaneGeometry, BoxGeometry, Me
   BufferAttribute, PointLight, ShaderMaterial, UniformsUtils, UniformsLib, HemisphereLight,
   AmbientLight, DirectionalLight, VertexNormalsHelper, DirectionalLightHelper, Object3D, Color,
   CubeTextureLoader, Vector3, AxisHelper, CameraHelper, PCFSoftShadowMap, Vector4,
-  Fog, LensFlare, AdditiveBlending, Points, ObjectLoader, Clock } from 'three';
+  Fog, LensFlare, AdditiveBlending, Points, ObjectLoader, Clock, Box3 } from 'three';
 import Toggle from 'react-toggle';
 import Select from 'react-select';
 import 'react-select/dist/react-select.css';
@@ -22,6 +22,7 @@ import { Terra } from './external/terra';
 import { OrbitControls } from './external/orbitcontrols';
 import * as heightfield from './external/heightfield';
 import { PointerLockControls } from './external/pointerlockcontrols';
+import inside from 'point-in-polygon';
 
 import './App.css';
 
@@ -101,6 +102,7 @@ class App extends Component {
       'skybox45/skyrender0003.bmp',
     ], (skybox) => {
       // House from: https://clara.io/view/d5ae6d8e-a942-4067-b966-8802a1b42a9c#
+      // Concrete from: http://seamless-pixels.blogspot.ca/p/free-seamless-concrete-textures.html
       new ObjectLoader().load('house/house.json', (house) => {
         // Loading inspired by: http://stackoverflow.com/a/39136667
         const assets = [
@@ -355,11 +357,18 @@ class App extends Component {
     this.initShadowDemo();
     this.initHouseDemo();
 
+    this.houseBounds = [
+      [397.090, 396.269],
+      [388.767, 403.952],
+      [393.289, 408.596],
+      [401.382, 400.409],
+    ];
+
     // DEBUG:
     // this.scene.add(new VertexNormalsHelper(this.ground_mesh, 2, 0x00ff00, 1));
     // this.scene.add(new DirectionalLightHelper(this.sunlight, 5));
     // this.scene.add(new CameraHelper(this.sunlight.shadow.camera));
-    this.scene.add(new AxisHelper(100));
+    // this.scene.add(new AxisHelper(100));
 
     // Tell React that we loaded weathergl
     this.setState(this.state);
@@ -427,7 +436,6 @@ class App extends Component {
       this.scene.remove(this.houseControls.getObject());
       this.houseControls.dispose();
       this.houseControls = null;
-      this.clock = null;
 
       document.removeEventListener('keydown', this.onKeyDown);
       document.removeEventListener('keyup', this.onKeyUp);
@@ -451,16 +459,11 @@ class App extends Component {
       return;
     }
 
-    this.clock = new Clock();
-
-
-    // this.camera.up.set(0, 0, 1);
-
     this.houseControls = new PointerLockControls(this.camera);
     this.houseControls.getObject().name = 'house_controls_object';
     this.scene.add(this.houseControls.getObject());
 
-    this.houseControls.getObject().position.set(400, 400, 20);
+    this.houseControls.getObject().position.set(394, 404, 20);
 
     this.moveForward = false;
     this.moveBackward = false;
@@ -491,8 +494,6 @@ class App extends Component {
     document.body.requestPointerLock = document.body.requestPointerLock ||
            document.body.mozRequestPointerLock ||
            document.body.webkitRequestPointerLock;
-    // Ask the browser to lock the pointer
-
 
     this.onKeyDown = (event) => {
       switch (event.keyCode) {
@@ -536,20 +537,8 @@ class App extends Component {
       }
     };
 
-    this.pointerLockChange = (event) => {
-
-    };
-
     document.addEventListener('keydown', this.onKeyDown, false);
     document.addEventListener('keyup', this.onKeyUp, false);
-
-
-    // this.houseControls.update(this.clock.getDelta());
-    // this.houseControls.activeLook = false;
-    // this.houseControls.movementSpeed = 1;
-    // this.houseControls.lookSpeed = 0.1;
-    // this.houseControls.activeLook = true;
-    // this.houseControls.lookVertical = true;
   }
 
   updateHouseDemo() {
@@ -562,10 +551,6 @@ class App extends Component {
     }
 
     if (this.controlsEnabled) {
-      // raycaster.ray.origin.copy( controls.getObject().position );
-      // raycaster.ray.origin.y -= 10;
-      // var intersections = raycaster.intersectObjects( objects );
-      // var isOnObject = intersections.length > 0;
       const time = performance.now();
       const delta = (time - this.prevTime) / 1000;
       this.velocity.x -= this.velocity.x * 10.0 * delta;
@@ -582,9 +567,23 @@ class App extends Component {
       if (this.moveRight) {
         this.velocity.x += 20.0 * delta;
       }
+
+      let position;
       this.houseControls.getObject().translateX(this.velocity.x * delta);
+      position = this.houseControls.getObject().position;
+      if(!inside([position.x, position.y], this.houseBounds)) {
+        this.houseControls.getObject().translateX(this.velocity.x * delta * -1.0);
+      }
+
       this.houseControls.getObject().translateY(this.velocity.y * delta);
+      position = this.houseControls.getObject().position;
+      if(!inside([position.x, position.y], this.houseBounds)) {
+        this.houseControls.getObject().translateY(this.velocity.y * delta * -1.0);
+      }
+
       this.prevTime = time;
+
+      console.log(this.houseControls.getObject().position);
     }
 
     this.ground_mesh.material.uniforms.gameCameraPosition.value = this.houseControls.getObject().position;
@@ -593,7 +592,6 @@ class App extends Component {
 
   initClear() {
     if (this.state.selectedWeather.value !== 1) { // Check if clear weather is enabled.
-
     }
   }
 

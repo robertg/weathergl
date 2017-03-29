@@ -5,6 +5,7 @@
   "//": "For github pages: \"homepage\": \"http://robertg.github.io/weathergl\"",
   "dependencies": {
     "howler": "^2.0.3",
+    "point-in-polygon": "^1.0.1",
     "raw-loader": "^0.5.1",
     "rc-slider": "^6.3.1",
     "rc-tooltip": "^3.4.2",

@@ -19,6 +19,7 @@ const PointerLockControls = PointerLockControls = function ( camera ) {
 
   var yawObject = new THREE.Object3D();
   yawObject.position.z = 10;
+  yawObject.rotation.z += Math.PI - Math.PI/6;
   yawObject.add( pitchObject );
 
   var PI_2 = Math.PI / 2;
@@ -29,8 +30,6 @@ const PointerLockControls = PointerLockControls = function ( camera ) {
 
     var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
     var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-
-    let oldYawObjectPosition = yawObject.position;
 
     yawObject.rotation.z -= movementX * 0.002;
     pitchObject.rotation.x -= movementY * 0.002;
