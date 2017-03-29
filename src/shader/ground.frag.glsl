@@ -214,7 +214,7 @@ void main() {
 
 
   // https://github.com/mrdoob/three.js/blob/dev/examples/js/ShaderSkin.js
-  if(distance(gameCameraPosition, vec3(vPos.xy, height)) < 2o.0) {
+  if(distance(gameCameraPosition, vec3(vPos.xy, height)) < 25.0) {
     normal = perturbNormalArb(-vViewPosition, normal, vec2(dBx, dBy));
   }
 

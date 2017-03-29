@@ -83,7 +83,7 @@ class App extends Component {
     };
 
     this.state.selectedWeather = this.state.weatherOptions[0];
-    this.state.selectedMode = this.state.modeOptions[1];
+    this.state.selectedMode = this.state.modeOptions[0];
   }
 
   componentDidMount() {
