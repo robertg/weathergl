@@ -1,19 +1,35 @@
-# WeatherGL
+# WeatherGL: http://gawdzik.net/weathergl/
 
-WeatherGL is a React project which requires a javascript development environment.
- - Documentation is found in weathergl/DOCUMENTATION.md
+WeatherGL is a React project which requires a Javascript development environment.
+ - Extensive documentation is found in the final report.
+ - There are two modes:
+   - Shadow Mode: Demonstrates a floating cube to showcase shadowmaps
+   - House Mode: A bonus mode which enables you to walk around a house in first person.
+ - To access the UI, click the burger menu on the top left.
 
-Screenshots due tomorrow.
-
-### Requirements:
+### Requirements
  - https://nodejs.org/en/download/
    - Node.js 6.10 or higher.
    - npm 3.10.10 or higher.
 
-### Attributions:
- - See ATTRIBUTIONS.md
+### To run weathergl on localhost
 
-### Objectives:
+```
+npm install
+npm run start
+```
+
+WeatherGL will appear on localhost:3000.
+
+### Screenshots
+ - screenshot1.png: Shadow Demo Mode: Demonstration of dynamic shadow maps
+ - screenshot2.png: Demonstration of UI
+ - screenshot3.png: Demonstration of bumpmapping on terrain
+ - screenshot4.png: Demonstration of House Mode (Bonus) and lens flare effect
+ - screenshot5.png: Demonstration of Rainy Weather being enabled.
+ - screenshot6.png: Demonstration of Snowy Weather being enabled.
+
+### Objectives
 
 1. The WeatherGL scene is correctly modeled with no visual artifacts or distortion.
 2. Models rendered in the WeatherGL scene are texture mapped.
@@ -26,72 +42,12 @@ Screenshots due tomorrow.
 9. Static Collision Detection to enable an immersive environment (e.g. bumping into things when walking around).
 10. Visual snow and rain effects using particle systems and/or other graphic techniques.
 
-
-## Reading
-
 ### Conventions:
  - 1 unit == 1 meter
- - Sandbox view == 1.2km^2
- - Foreground == 1 km^2, height == 2m max
- - Background == 4 * 0.2km*1.2km, height == 100m
- - <!-- Fog outside Sandbox? -->
 
-### Reading:
- - (Bump mapping) http://mmikkelsen3d.blogspot.ca/2011/07/derivative-maps.html
-   - https://threejs.org/docs/?q=TextureLoader#Reference/Loaders/TextureLoader
- - http://vterrain.org/Water/
- - https://github.com/ashima/webgl-noise
- - http://vterrain.org/Elevation/global.html
- - http://srchea.com/terrain-generation-the-diamond-square-algorithm-and-three-js
+### Attributions:
+ - See ATTRIBUTIONS.md for assets
+ - See inline attributions in `src/`
 
-### Lighting:
- - https://threejs.org/docs/api/lights/AmbientLight.html
- - https://threejs.org/docs/api/lights/DirectionalLight.html
- - http://learningthreejs.com/blog/2012/01/20/casting-shadows/
- - http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-16-shadow-mapping/
- - https://github.com/mrdoob/three.js/issues/6420
-
-### Terrain:
- - Inspiration: https://github.com/spacejack/terra/
- - Terrain mesh moves with the camera, loaded from the heightmap
- - Use sampler2D to store terrain.
-    - https://threejs.org/docs/api/core/BufferGeometry.html
-    - https://threejs.org/docs/api/materials/RawShaderMaterial.html
-    - Bump mapping: http://fabiensanglard.net/bumpMapping/index.php
-
-### Misc:
-- Car: http://www.blendswap.com/blends/view/76077
-  - cc-by commons
-  - https://github.com/mrdoob/three.js/issues/8677
-- Generate terrain ()
-  Ex:
-   - https://github.com/IceCreamYou/THREE.Terrain
-   - https://github.com/srchea/Terrain-Generation
-   - https://github.com/maurizzzio/Three.js-City
-
-## Skybox:
- - http://www.custommapmakers.org/skyboxes.php
- - Use CubeTextureLoader.
- - Source: https://reije081.home.xs4all.nl/skyboxes/
-
-## Particle Systems (Inspiration)
- - https://stemkoski.github.io/Three.js/Particle-Engine.html
- - https://aerotwist.com/tutorials/creating-particles-with-three-js/
- - https://threejs.org/docs/?q=Point#Reference/Materials/PointsMaterial
-  - Kinda related for starry night: https://threejs.org/docs/?q=Point#Reference/Lights/PointLight
- - https://solusipse.net/varia/threejs-examples/realistic-rain/
- - https://threejs.org/examples/webgl_nearestneighbour.html
-
-## Lens Flare
- - https://github.com/timoxley/threejs/blob/master/examples/webgl_lensflares.html
- - https://threejs.org/docs/?q=LensFlare#Reference/Objects/LensFlare
-
-- Foreground has detailed terrain generation (likely fixed heightmap)
-- Mountainous Background is generated
-
-## Sidebar:
- - http://balloob.github.io/react-sidebar/example/
-
-## Sound
- - https://github.com/goldfire/howler.js
-   - https://www.freesound.org/people/rhodesmas/sounds/321723/
+### Various Technical Sources
+ - See READING.md

@@ -1,3 +1,4 @@
+ - three.js: https://github.com/mrdoob/three.js/
  - https://opengameart.org/content/cloudy-skyboxes
    - Attribution 3.0 Unported
    - https://creativecommons.org/licenses/by/3.0/
@@ -15,3 +16,7 @@
  - Ambient Background Loop (background.wav): https://www.freesound.org/people/rhodesmas/sounds/321723/
  - Rain Loop: https://www.freesound.org/people/klangfabrik/sounds/160699/
  - Snow Loop: https://www.freesound.org/people/Robinhood76/sounds/175513/
+ - Feridun: https://uwaterloo.ca/president/sites/ca.president/files/resize/styles/sidebar-220px-wide/public/uploads/images/uw_president_01-w2-238x258.jpg
+ - Professor Baranoski: https://cs.uwaterloo.ca/sites/ca.computer-science/files/styles/thumbnail/public/uploads/images/Baranoski_0.jpg
+ - House: https://clara.io/view/d5ae6d8e-a942-4067-b966-8802a1b42a9c#
+ - Concrete: http://seamless-pixels.blogspot.ca/p/free-seamless-concrete-textures.html

@@ -165,7 +165,9 @@ class App extends Component {
     this.renderer.setSize(document.body.clientWidth, document.body.clientHeight);
 
     if (this.state.selectedMode.value === 4) { // Check if shadow demo is enabled.
-      this.controls.handleResize();
+      if(this.controls) {
+        this.controls.handleResize();
+      }
     }
 
     if (this.houseControls) {
