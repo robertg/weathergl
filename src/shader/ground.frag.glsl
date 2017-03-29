@@ -174,6 +174,7 @@ void main() {
   // Compute height just like the vertex shader.
   vec2 sample = vPos.xy * hmap_scale.xy + vec2(0.5, 0.5);
   vec4 ch = texture2D(hmap, sample);
+  float height = ch.r * hmap_scale.z;
   float mixer = min(ch.r * 2.0, 1.0);
 
   // Apply the rock and grass texture
@@ -213,7 +214,7 @@ void main() {
 
 
   // https://github.com/mrdoob/three.js/blob/dev/examples/js/ShaderSkin.js
-  if(distance(gameCameraPosition, vPos) < 25.0) {
+  if(distance(gameCameraPosition, vec3(vPos.xy, height)) < 25.0) {
     normal = perturbNormalArb(-vViewPosition, normal, vec2(dBx, dBy));
   }
 

@@ -476,9 +476,11 @@ class App extends Component {
       if (document.pointerLockElement === element || document.mozPointerLockElement === element || document.webkitPointerLockElement === element) {
         this.controlsEnabled = true;
         this.houseControls.enabled = true;
+        this.velocity = new Vector3();
       } else {
         this.controlsEnabled = false;
         this.houseControls.enabled = false;
+        this.velocity = new Vector3();
       }
     };
 
