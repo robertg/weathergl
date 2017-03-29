@@ -9,15 +9,20 @@ import { WebGLRenderer, Scene, PerspectiveCamera, PlaneGeometry, BoxGeometry, Me
   Fog, LensFlare, AdditiveBlending, Points } from 'three';
 import Toggle from 'react-toggle';
 import Select from 'react-select';
+import 'react-select/dist/react-select.css';
 import Stats from 'stats.js';
 import TrackballControls from 'three-trackballcontrols';
 import { scaleRotate as Menu } from 'react-burger-menu';
 import { Howl } from 'howler';
+import Slider, { Range } from 'rc-slider';
+import Tooltip from 'rc-tooltip';
+import 'rc-slider/assets/index.css';
 import { Terrain } from './external/generator';
 import { Terra } from './external/terra';
 import { OrbitControls } from './external/orbitcontrols';
 import * as heightfield from './external/heightfield';
-import 'react-select/dist/react-select.css';
+
+
 import './App.css';
 
 /* eslint-disable */
@@ -344,6 +349,9 @@ class App extends Component {
     // this.scene.add(new DirectionalLightHelper(this.sunlight, 5));
     // this.scene.add(new CameraHelper(this.sunlight.shadow.camera));
     // this.scene.add(new AxisHelper(100));
+
+    // Tell React that we loaded weathergl
+    this.setState(this.state);
   }
 
   initClear() {
@@ -541,11 +549,34 @@ class App extends Component {
     this.initSnow(this.snow_textures);
   }
 
-  handleTimeOptionsChange(selected) {
-    this.setState({ selectedTime: selected });
+  handleSunlightChange(light) {
+    this.sunlight.intensity = light / 100.0;
+    // Since sunlight is a property on DirectionalLight:
+    this.setState(this.state);
   }
 
   render() {
+    // handle: http://react-component.github.io/slider/examples/handle.html
+    const createSliderWithTooltip = Slider.createSliderWithTooltip;
+    const Range = createSliderWithTooltip(Slider.Range);
+    const Handle = Slider.Handle;
+    const handle = (props) => {
+      const { value, dragging, index, ...restProps } = props;
+      return (
+        <Tooltip
+          prefixCls="rc-slider-tooltip"
+          overlay={value}
+          visible={dragging}
+          placement="top"
+          key={index}
+        >
+          <Handle {...restProps} />
+        </Tooltip>
+      );
+    };
+
+    const sunlightValue = this.sunlight ? this.sunlight.intensity * 100 : 0;
+
     return (
       <div id="outer-container">
         <Menu pageWrapId={'page-wrap'} outerContainerId={'outer-container'}>
@@ -562,12 +593,16 @@ class App extends Component {
             />
           </div>
           <div className="menu-item">
-            <Select
-              clearable={false}
-              value={this.state.selectedTime}
-              options={this.state.timeOptions}
-              onChange={this.handleTimeOptionsChange.bind(this)}
-            />
+            <div>
+              <p>Sunlight</p>
+              <Slider
+                min={0} max={100}
+                defaultValue={sunlightValue}
+                value={sunlightValue}
+                handle={handle}
+                onChange={this.handleSunlightChange.bind(this)}
+              />
+            </div>
           </div>
           <div className="menu-item">
             <label>

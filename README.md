@@ -2,6 +2,8 @@
 
 WeatherGL is a React project which requires a javascript development requirement.
 
+Screenshots due tomorrow.
+
 ### Requirements:
  - https://nodejs.org/en/download/
    - Node.js 6.10 or higher.
@@ -22,7 +24,6 @@ WeatherGL is a React project which requires a javascript development requirement
 8. Shadows using shadow mapping for weather parameters that contain the sun.
 9. Static Collision Detection to enable an immersive environment (e.g. bumping into things when walking around).
 10. Visual snow and rain effects using particle systems and/or other graphic techniques.
-
 
 
 ## Reading
