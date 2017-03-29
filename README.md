@@ -87,8 +87,7 @@ WeatherGL is a React project which requires a javascript development requirement
 - Foreground has detailed terrain generation (likely fixed heightmap)
 - Mountainous Background is generated
 
-
 ## Sidebar:
  - http://balloob.github.io/react-sidebar/example/
 
-
+## Sound

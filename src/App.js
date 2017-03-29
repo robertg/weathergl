@@ -41,7 +41,7 @@ class App extends Component {
     super();
 
     this.scene = new Scene();
-    this.camera = new PerspectiveCamera(75, document.body.clientWidth / document.body.clientHeight, 0.1, 2000);
+    this.camera = new PerspectiveCamera(75, document.body.clientWidth / document.body.clientHeight, 1, 2000);
     this.renderer = new WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setSize(document.body.clientWidth, document.body.clientHeight);
     this.renderer.shadowMap.enabled = true;
@@ -108,6 +108,8 @@ class App extends Component {
               { name: 'rain3', url: 'rain/rain3.png' },
               { name: 'rain4', url: 'rain/rain4.png' },
               { name: 'rain5', url: 'rain/rain5.png' },
+              // Snow textures from: http://oos.moxiecode.com/js_webgl/snowfall/
+              { name: 'snow1', url: 'snow/snowflake1.png'},
       ];
 
       const textures = {};
@@ -123,6 +125,7 @@ class App extends Component {
                   textures.grass_bumpmap, textures.rock_texture, textures.rock_bumpmap,
                   textures.lensflare0,
                   [textures.rain1, textures.rain2, textures.rain3, textures.rain4, textures.rain5],
+                  [textures.snow1],
                 );
             self.renderFrame();
           }
@@ -141,13 +144,13 @@ class App extends Component {
     this.renderer.setSize(document.body.clientWidth, document.body.clientHeight);
   }
 
-  initScene(ground_hmap, skybox, grass_texture, grass_bumpmap, rock_texture, rock_bumpmap, lensflare0, rain_textures) {
+  initScene(ground_hmap, skybox, grass_texture, grass_bumpmap, rock_texture, rock_bumpmap, lensflare0, rain_textures, snow_textures) {
     const fast_debug = false;
     this.camera.position.set(100, 0, 100);
     this.camera.lookAt(new Vector3(0, 0, 0));
     this.scene.add(this.camera);
 
-    // debug
+    // debug camera
     this.controls = new OrbitControls(this.camera);
     this.controls.rotateSpeed = 1.0;
     this.controls.zoomSpeed = 1.2;
@@ -165,27 +168,6 @@ class App extends Component {
     this.cube.castShadow = true;
     this.cube.position.z += 25;
     this.scene.add(this.cube);
-
-    // const meshWidth = 100;
-    // const meshHeight = 100;
-    // const meshWidthSegments = meshWidth;
-    // const meshHeightSegments = meshHeight;
-
-    // this.foregroundSurface = new Mesh(
-    //     new PlaneGeometry(meshWidth, meshHeight, meshWidthSegments, meshHeightSegments),
-    //     new MeshBasicMaterial({ color: 0xffffff }),
-    // // );
-
-    // const terrainOptions = { xSegments: meshWidthSegments,
-    //   ySegments: meshHeightSegments,
-    //   maxHeight: 10,
-    //   easing: Terrain.EaseInOut,
-    //   minHeight: -1 };
-
-    // this.foregroundSurface.rotation.x = -0.5 * Math.PI;
-    // Terrain.DiamondSquare(this.foregroundSurface.geometry.vertices, terrainOptions);
-    // Terrain.Normalize(this.foregroundSurface, terrainOptions);
-    // this.scene.add(this.foregroundSurface);
 
     // Setup ground:
     // Only works on power of 2 heightmaps!
@@ -247,7 +229,6 @@ class App extends Component {
       uniforms.rock_texture.value = rock_texture;
       uniforms.rock_bumpmap.value = rock_bumpmap;
 
-
       const ground_mat = new ShaderMaterial({
         uniforms,
         vertexShader: ground_vert,
@@ -261,12 +242,11 @@ class App extends Component {
       this.ground_mesh.receiveShadow = true;
       this.ground_mesh.castShadow = true;
 
-
       this.ground_mesh.geometry.computeFaceNormals();
       this.ground_mesh.geometry.computeVertexNormals();
       console.log(this.ground_mesh.geometry);
 
-      // TODO: Cache this, maybe load it from JSON? Or localstorage?
+      // TODO: If this is slow then cache this, maybe load it from JSON? Or localstorage?
       this.ground_mesh.geometry.attributes.normal.array = hf.vtxNormals;
 
       this.ground_mesh.uvsNeedUpdate = true;
@@ -309,15 +289,9 @@ class App extends Component {
     this.scene.add(this.sunlight);
     // this.scene.add(this.sunlight.target);
 
-
     // Load Cube Map (source: https://reije081.home.xs4all.nl/skyboxes/ )
     this.scene.background = skybox;
 
-    // DEBUG:
-    // this.scene.add(new VertexNormalsHelper(this.ground_mesh, 2, 0x00ff00, 1));
-    // this.scene.add(new DirectionalLightHelper(this.sunlight, 5));
-    // this.scene.add(new CameraHelper(this.sunlight.shadow.camera));
-    // this.scene.add(new AxisHelper(100));
 
     // Add fog
     this.scene.fog = new Fog(0xffffff, 50, 1000);
@@ -329,49 +303,160 @@ class App extends Component {
 
     this.scene.add(this.lensflare);
 
-    // Add rain:
-    this.initRain(rain_textures);
+    // Setup weather
+    this.rain_textures = rain_textures;
+    this.snow_textures = snow_textures;
+
+    this.initClear();
+    this.initRain(this.rain_textures);
+    this.initSnow(this.snow_textures);
+
+
+    // DEBUG:
+    // this.scene.add(new VertexNormalsHelper(this.ground_mesh, 2, 0x00ff00, 1));
+    // this.scene.add(new DirectionalLightHelper(this.sunlight, 5));
+    // this.scene.add(new CameraHelper(this.sunlight.shadow.camera));
+    // this.scene.add(new AxisHelper(100));
+  }
+
+  initClear() {
+    if (this.state.selectedWeather.value !== 1) { // Check if clear weather is enabled.
+      return;
+    }
   }
 
   initRain(rain_textures) {
+    if (this.state.selectedWeather.value !== 2) { // Check if rainy weather is enabled.
+      return;
+    }
+
     // Inspired by: https://github.com/mrdoob/three.js/blob/dev/examples/webgl_nearestneighbour.html
-    for(let tex of rain_textures) {
+    for (const tex of rain_textures) {
       tex.flipY = false;
     }
 
-    let amountOfParticles = 500000;
-
-    let pointShaderMaterial = new ShaderMaterial( {
+    const pointShaderMaterial = new ShaderMaterial({
       uniforms: {
         tex: { value: rain_textures[0] },
-        zoom: { value: 9.0 }
+        size: { value: 4.0 },
+        rain: { value: true}
       },
-      vertexShader:   particle_vert,
+      vertexShader: particle_vert,
+      fragmentShader: particle_frag,
+      transparent: true,
+      blending: AdditiveBlending,
+    });
+
+    this.amountOfParticles = 500000;
+    this.rainParticlePositions = new Float32Array(this.amountOfParticles * 3);
+    const alphas = new Float32Array(this.amountOfParticles);
+    const particleGeom = new BufferGeometry();
+    particleGeom.addAttribute('position', new BufferAttribute(this.rainParticlePositions, 3));
+
+    this.rainParticles = new Points(particleGeom, pointShaderMaterial);
+    this.rainParticles.name = "rainParticles";
+    for (let x = 0; x < this.amountOfParticles; x++) {
+      this.rainParticlePositions[x * 3 + 0] = Math.random() * 1000 - Math.random() * 1000;
+      this.rainParticlePositions[x * 3 + 1] = Math.random() * 1000 - Math.random() * 1000;
+      this.rainParticlePositions[x * 3 + 2] = Math.random() * 1000;
+    }
+
+    this.scene.add(this.rainParticles);
+  }
+
+  removeRain() {
+    if(this.rainParticles) {
+      this.scene.remove(this.rainParticles);
+      this.rainParticles = null;
+    }
+  }
+
+  initSnow(snow_textures) {
+    if (this.state.selectedWeather.value !== 3) { // Check if snowy weather is enabled.
+      return;
+    }
+
+    // Inspired by: https://github.com/mrdoob/three.js/blob/dev/examples/webgl_nearestneighbour.html
+    for (const tex of snow_textures) {
+      tex.flipY = false;
+    }
+
+    const pointShaderMaterial = new ShaderMaterial({
+      uniforms: {
+        tex: { value: snow_textures[0] },
+        size: { value: 2.0 },
+        rain: { value: false}
+      },
+      vertexShader: particle_vert,
       fragmentShader: particle_frag,
       transparent: true,
       blending: AdditiveBlending
     });
 
-    let positions = new Float32Array( amountOfParticles * 3 );
-    let alphas = new Float32Array( amountOfParticles );
-    let _particleGeom = new BufferGeometry();
-    _particleGeom.addAttribute( 'position', new BufferAttribute( positions, 3 ) );
-    _particleGeom.addAttribute( 'alpha', new BufferAttribute( alphas, 1 ) );
+    this.amountOfParticles = 50000;
+    this.snowParticlePositions = new Float32Array(this.amountOfParticles * 3);
+    const alphas = new Float32Array(this.amountOfParticles);
+    const particleGeom = new BufferGeometry();
+    particleGeom.addAttribute('position', new BufferAttribute(this.snowParticlePositions, 3));
 
-    let particles = new Points( _particleGeom, pointShaderMaterial );
-    for (var x = 0; x < amountOfParticles; x++) {
-      positions[ x * 3 + 0 ] = Math.random() * 1000 - Math.random() * 1000;
-      positions[ x * 3 + 1 ] = Math.random() * 1000 - Math.random() * 1000;
-      positions[ x * 3 + 2 ] = Math.random() * 1000; // - Math.random() * 1000;
-      alphas[x] = 1.0;
+    this.snowParticles = new Points(particleGeom, pointShaderMaterial);
+    this.snowParticles.name = "snowParticles";
+    for (let x = 0; x < this.amountOfParticles; x++) {
+      this.snowParticlePositions[x * 3 + 0] = Math.random() * 1000 - Math.random() * 1000;
+      this.snowParticlePositions[x * 3 + 1] = Math.random() * 1000 - Math.random() * 1000;
+      this.snowParticlePositions[x * 3 + 2] = Math.random() * 1000;
     }
 
-    this.scene.add(particles);
+    this.scene.add(this.snowParticles);
+  }
+
+  removeSnow() {
+    if(this.snowParticles) {
+      this.scene.remove(this.snowParticles);
+      this.snowParticles = null;
+    }
   }
 
   animateRain() {
-    if (this.state.selectedWeather.value === 2) { // Check if rainy weather is enabled.
+    if (this.state.selectedWeather.value !== 2) { // Check if rainy weather is enabled.
+      return;
     }
+
+    if(!this.rainParticles) {
+      return;
+    }
+
+    for (let x = 0; x < this.amountOfParticles; x++) {
+      this.rainParticlePositions[x * 3 + 0] = Math.random() * 1000 - Math.random() * 1000;
+      this.rainParticlePositions[x * 3 + 1] = Math.random() * 1000 - Math.random() * 1000;
+      this.rainParticlePositions[x * 3 + 2] = Math.random() * 1000;
+    }
+
+    this.rainParticles.geometry.attributes.position.needsUpdate = true;
+  }
+
+  animateSnow() {
+    if (this.state.selectedWeather.value !== 3) { // Check if snowy weather is enabled.
+      return;
+    }
+
+    if(!this.snowParticles) {
+      return;
+    }
+
+    for (let x = 0; x < this.amountOfParticles; x++) {
+      this.snowParticlePositions[x * 3 + 0] += Math.sin(this.snowParticlePositions[x * 3 + 2]) / 20.0;
+      this.snowParticlePositions[x * 3 + 1] += Math.sin(this.snowParticlePositions[x * 3 + 2]) / 20.0;
+      this.snowParticlePositions[x * 3 + 2] -= (Math.abs(Math.sin(this.snowParticlePositions[x * 3 + 2]))
+                                             + Math.abs(Math.cos(this.snowParticlePositions[x * 3 + 2]))) / 2.0;
+
+      if(this.snowParticlePositions[x * 3 + 2] < 0) {
+        // Reset position
+        this.snowParticlePositions[x * 3 + 2] = 1000 + Math.random() * 50;
+      }
+    }
+
+    this.snowParticles.geometry.attributes.position.needsUpdate = true;
   }
 
   renderFrame() {
@@ -386,6 +471,9 @@ class App extends Component {
     // this.foregroundSurface.rotation.x += 0.005;
     // this.foregroundSurface.rotation.y += 0.005;
     this.controls.update();
+
+    this.animateRain();
+    this.animateSnow();
 
     this.renderer.render(this.scene, this.camera);
 
@@ -405,6 +493,13 @@ class App extends Component {
 
   handleWeatherOptionsChange(selected) {
     this.setState({ selectedWeather: selected });
+    this.state.selectedWeather = selected; // We need to use it right now
+
+    this.removeRain();
+    this.removeSnow();
+    this.initClear();
+    this.initRain(this.rain_textures);
+    this.initSnow(this.snow_textures);
   }
 
   handleTimeOptionsChange(selected) {
