@@ -1340,7 +1340,7 @@
             "bones": []
         },
         "materials": [{
-            "depthTest": true,
+            "depthTest": false,
             "transparent": true,
             "DbgIndex": 0,
             "specularCoef": 50,

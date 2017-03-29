@@ -162,6 +162,7 @@ uniform sampler2D grass_texture;
 uniform sampler2D grass_bumpmap;
 uniform sampler2D rock_texture;
 uniform sampler2D rock_bumpmap;
+uniform vec3 gameCameraPosition;
 
 varying vec2 vUv;
 varying vec3 vPos;
@@ -189,30 +190,32 @@ void main() {
   vec2 dSTdy = dFdy(vUv);
 
   float bumpmap_Hll = mix(
-    texture2D(grass_bumpmap, vUv).x,
-    texture2D(rock_bumpmap, vUv).x,
+    texture2D(grass_bumpmap, vUv).r,
+    texture2D(rock_bumpmap, vUv).r,
     mixer
   );
 
   float bumpmap_dBx = mix(
-    texture2D(grass_bumpmap, vUv + dSTdx).x,
-    texture2D(rock_bumpmap, vUv + dSTdx).x,
+    texture2D(grass_bumpmap, vUv + dSTdx).r,
+    texture2D(rock_bumpmap, vUv + dSTdx).r,
     mixer
   );
 
   float bumpmap_dBy = mix(
-    texture2D(grass_bumpmap, vUv + dSTdy).x,
-    texture2D(rock_bumpmap, vUv + dSTdy).x,
+    texture2D(grass_bumpmap, vUv + dSTdy).r,
+    texture2D(rock_bumpmap, vUv + dSTdy).r,
     mixer
   );
 
-  float Hll = 5.0 * bumpmap_Hll;
-  float dBx = 5.0 * bumpmap_dBx - Hll;
-  float dBy = 5.0 * bumpmap_dBy - Hll;
+  float Hll = 1.0 * bumpmap_Hll;
+  float dBx = 1.0 * bumpmap_dBx - Hll;
+  float dBy = 1.0 * bumpmap_dBy - Hll;
 
 
   // https://github.com/mrdoob/three.js/blob/dev/examples/js/ShaderSkin.js
-  normal = perturbNormalArb(-vViewPosition, normal, vec2(dBx, dBy));
+  if(distance(gameCameraPosition, vPos) < 25.0) {
+    normal = perturbNormalArb(-vViewPosition, normal, vec2(dBx, dBy));
+  }
 
   // Apply lighting
   vec4 addedLights = vec4(0.0, 0.0, 0.0, 1.0);

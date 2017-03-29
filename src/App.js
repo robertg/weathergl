@@ -48,7 +48,7 @@ class App extends Component {
 
     this.scene = new Scene();
     this.camera = new PerspectiveCamera(75, document.body.clientWidth / document.body.clientHeight, 0.1, 2000);
-    this.camera.name = "camera";
+    this.camera.name = 'camera';
     this.renderer = new WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setSize(document.body.clientWidth, document.body.clientHeight);
     this.renderer.shadowMap.enabled = true;
@@ -108,10 +108,10 @@ class App extends Component {
                 { name: 'ground_hmap', url: 'heightmap2.png' },
                 // Grass texture from http://trutextures.blogspot.ca/2013/01/free-seamless-tiling-dead-grass-terrain.html
                 { name: 'grass_texture', url: 'grass/texture.jpg' },
-                { name: 'grass_bumpmap', url: 'grass/bumpmap.jpg' },
+                { name: 'grass_bumpmap', url: 'grass/normal.jpg' },
                 // // Rock texture from http://www.virtual-lands-3d.com/textures.htm
                 { name: 'rock_texture', url: 'rock2/texture.jpg' },
-                { name: 'rock_bumpmap', url: 'rock2/bumpmap.jpg' },
+                { name: 'rock_bumpmap', url: 'rock2/normal.jpg' },
                 { name: 'lensflare0', url: 'lensflare/lensflare0.png' },
                 // Rain textures from: https://solusipse.net/varia/threejs-examples/realistic-rain/
                 { name: 'rain1', url: 'rain/rain1.png' },
@@ -137,7 +137,7 @@ class App extends Component {
                     textures.lensflare0,
                     [textures.rain1, textures.rain2, textures.rain3, textures.rain4, textures.rain5],
                     [textures.snow1],
-                    house
+                    house,
                   );
               self.renderFrame();
             }
@@ -160,7 +160,7 @@ class App extends Component {
       this.controls.handleResize();
     }
 
-    if(this.houseControls) {
+    if (this.houseControls) {
       // this.houseControls.handleResize();
     }
   }
@@ -221,6 +221,7 @@ class App extends Component {
           rock_texture: { type: 't', value: null },
           rock_bumpmap: { type: 't', value: null },
           offsetRepeat: { value: new Vector4(0, 0, 1, 1) },
+          gameCameraPosition: { value: new Vector3(0, 0, 1) },
           max_height: { type: 'f', value: maxHeight },
           hmap_scale: { type: '3f', value: [1.0 / groundHmapSize, 1.0 / groundHmapSize, maxHeight] },
         }]);
@@ -343,11 +344,11 @@ class App extends Component {
 
     // Add house to the scene.
     this.house = house;
-    this.house.scale.set(10,10,10);
-    this.house.rotateY(Math.PI/2.0);
-    this.house.rotateZ(Math.PI/2.0);
-    this.house.rotateY(Math.PI/2.0 + Math.PI/4.0);
-    this.house.position.set(400,400,18.5);
+    this.house.scale.set(10, 10, 10);
+    this.house.rotateY(Math.PI / 2.0);
+    this.house.rotateZ(Math.PI / 2.0);
+    this.house.rotateY(Math.PI / 2.0 + Math.PI / 4.0);
+    this.house.position.set(400, 400, 18.5);
 
     this.scene.add(this.house);
 
@@ -365,7 +366,7 @@ class App extends Component {
   }
 
   removeShadowDemo() {
-    if(this.cube) {
+    if (this.cube) {
       this.scene.remove(this.cube);
       this.cube = null;
       this.controls.dispose();
@@ -389,7 +390,7 @@ class App extends Component {
     this.controls.staticMoving = true;
     this.controls.dynamicDampingFactor = 0.3;
     this.controls.keys = [65, 83, 68];
-    this.controls.target = new Vector3(0,0,0);
+    this.controls.target = new Vector3(0, 0, 0);
     this.controls.update();
 
 
@@ -399,7 +400,7 @@ class App extends Component {
     this.cube.receiveShadow = true;
     this.cube.castShadow = true;
     this.cube.position.z += 25;
-    this.cube.name = "shadow_cube";
+    this.cube.name = 'shadow_cube';
     this.scene.add(this.cube);
   }
 
@@ -408,33 +409,43 @@ class App extends Component {
       return;
     }
 
-    if(!this.cube) {
+    if (!this.cube) {
       return;
     }
-
-    debugger;
 
     this.cube.rotation.x += 0.005;
     this.cube.rotation.y += 0.005;
 
     this.controls.update();
+
+    this.ground_mesh.material.uniforms.gameCameraPosition.value = this.camera.position;
+    this.ground_mesh.material.uniforms.gameCameraPosition.needsUpdate = true;
   }
 
   removeHouseDemo() {
-    if(this.houseControls) {
+    if (this.houseControls) {
       this.scene.remove(this.houseControls.getObject());
       this.houseControls.dispose();
       this.houseControls = null;
       this.clock = null;
+
       document.removeEventListener('keydown', this.onKeyDown);
       document.removeEventListener('keyup', this.onKeyUp);
+      document.removeEventListener('pointerlockchange', this.pointerLockChange);
+      document.removeEventListener('mozpointerlockchange', this.pointerLockChange);
+      document.removeEventListener('webkitpointerlockchange', this.pointerLockChange);
+
+      document.exitPointerLock = document.exitPointerLock ||
+         document.mozExitPointerLock ||
+         document.webkitExitPointerLock;
+      document.exitPointerLock();
     }
   }
 
-  ////
+  // //
   // First Person controls for initHouseDemo and updateHouseDemo
   // are influenced by https://github.com/mrdoob/three.js/blob/dev/examples/misc_controls_pointerlock.html
-  ////
+  // //
   initHouseDemo() {
     if (this.state.selectedMode.value !== 5) { // Check if house demo is enabled.
       return;
@@ -442,12 +453,14 @@ class App extends Component {
 
     this.clock = new Clock();
 
-    this.camera.position.set(400,400,20);
-    this.camera.up.set(0, 0, 1);
+
+    // this.camera.up.set(0, 0, 1);
 
     this.houseControls = new PointerLockControls(this.camera);
-    this.houseControls.getObject().name = "house_controls_object";
+    this.houseControls.getObject().name = 'house_controls_object';
     this.scene.add(this.houseControls.getObject());
+
+    this.houseControls.getObject().position.set(400, 400, 20);
 
     this.moveForward = false;
     this.moveBackward = false;
@@ -457,8 +470,30 @@ class App extends Component {
     this.prevTime = performance.now();
     this.velocity = new Vector3();
 
-    this.onKeyDown = ( event ) => {
-      switch ( event.keyCode ) {
+    this.controlsEnabled = false;
+    this.pointerLockChange = (event) => {
+      const element = document.body;
+      if (document.pointerLockElement === element || document.mozPointerLockElement === element || document.webkitPointerLockElement === element) {
+        this.controlsEnabled = true;
+        this.houseControls.enabled = true;
+      } else {
+        this.controlsEnabled = false;
+        this.houseControls.enabled = false;
+      }
+    };
+
+    document.addEventListener('pointerlockchange', this.pointerLockChange, false);
+    document.addEventListener('mozpointerlockchange', this.pointerLockChange, false);
+    document.addEventListener('webkitpointerlockchange', this.pointerLockChange, false);
+
+    document.body.requestPointerLock = document.body.requestPointerLock ||
+           document.body.mozRequestPointerLock ||
+           document.body.webkitRequestPointerLock;
+    // Ask the browser to lock the pointer
+
+
+    this.onKeyDown = (event) => {
+      switch (event.keyCode) {
         case 38: // up
         case 87: // w
           this.moveForward = true;
@@ -478,8 +513,8 @@ class App extends Component {
       }
     };
 
-    this.onKeyUp = ( event ) => {
-      switch( event.keyCode ) {
+    this.onKeyUp = (event) => {
+      switch (event.keyCode) {
         case 38: // up
         case 87: // w
           this.moveForward = false;
@@ -499,8 +534,12 @@ class App extends Component {
       }
     };
 
-    document.addEventListener( 'keydown', this.onKeyDown, false );
-    document.addEventListener( 'keyup', this.onKeyUp, false );
+    this.pointerLockChange = (event) => {
+
+    };
+
+    document.addEventListener('keydown', this.onKeyDown, false);
+    document.addEventListener('keyup', this.onKeyUp, false);
 
 
     // this.houseControls.update(this.clock.getDelta());
@@ -516,9 +555,36 @@ class App extends Component {
       return;
     }
 
-    if(!this.houseControls) {
+    if (!this.houseControls) {
       return;
     }
+
+    if ( this.controlsEnabled ) {
+      // raycaster.ray.origin.copy( controls.getObject().position );
+      // raycaster.ray.origin.y -= 10;
+      // var intersections = raycaster.intersectObjects( objects );
+      // var isOnObject = intersections.length > 0;
+      var time = performance.now();
+      var delta = ( time - this.prevTime ) / 1000;
+      this.velocity.x -= this.velocity.x * 10.0 * delta;
+      this.velocity.y -= this.velocity.y * 10.0 * delta;
+      if ( this.moveForward ) {
+       this.velocity.y += 20.0 * delta;
+      }
+     if ( this.moveBackward ) {
+      this.velocity.y -= 20.0 * delta;
+      }
+      if ( this.moveLeft ) { this.velocity.x -= 20.0 * delta;
+      }
+      if ( this.moveRight ) { this.velocity.x += 20.0 * delta;
+      }
+        this.houseControls.getObject().translateX( this.velocity.x * delta );
+        this.houseControls.getObject().translateY( this.velocity.y * delta );
+        this.prevTime = time;
+      }
+
+      this.ground_mesh.material.uniforms.gameCameraPosition.value = this.houseControls.getObject().position;
+      this.ground_mesh.material.uniforms.gameCameraPosition.needsUpdate = true;
   }
 
   initClear() {
@@ -686,7 +752,10 @@ class App extends Component {
     this.animateRain();
     this.animateSnow();
 
+
+
     this.renderer.render(this.scene, this.camera);
+
 
     if (this.state.debug) {
       this.stats.end();
@@ -719,7 +788,7 @@ class App extends Component {
 
     this.scene.remove(this.camera);
     this.camera = new PerspectiveCamera(75, document.body.clientWidth / document.body.clientHeight, 0.1, 2000);
-    this.camera.name = "camera";
+    this.camera.name = 'camera';
 
     this.removeShadowDemo();
     this.removeHouseDemo();
@@ -731,6 +800,16 @@ class App extends Component {
     this.sunlight.intensity = light / 100.0;
     // Since sunlight is a property on DirectionalLight:
     this.setState(this.state);
+  }
+
+  handleCanvasClick() {
+    if (this.state.selectedMode.value !== 5) { // Check if house demo is enabled.
+      return;
+    }
+
+    if(!this.controlsEnabled) {
+      document.body.requestPointerLock();
+    }
   }
 
   render() {
@@ -801,7 +880,7 @@ class App extends Component {
           </div>
         </Menu>
 
-        <div id="page-wrap" ref={(node) => { this.node = node; }} className="App" />
+        <div id="page-wrap" ref={(node) => { this.node = node; }} onClick={this.handleCanvasClick.bind(this)} className="App" />
       </div>
     );
   }
