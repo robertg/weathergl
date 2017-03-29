@@ -15,6 +15,7 @@
     "react-toggle": "^3.0.1",
     "stats.js": "^0.17.0",
     "three": "^0.84.0",
+    "three-pointerlock": "0.0.2",
     "three-trackballcontrols": "0.0.5"
   },
   "devDependencies": {

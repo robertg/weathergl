@@ -6,7 +6,7 @@ import { WebGLRenderer, Scene, PerspectiveCamera, PlaneGeometry, BoxGeometry, Me
   BufferAttribute, PointLight, ShaderMaterial, UniformsUtils, UniformsLib, HemisphereLight,
   AmbientLight, DirectionalLight, VertexNormalsHelper, DirectionalLightHelper, Object3D, Color,
   CubeTextureLoader, Vector3, AxisHelper, CameraHelper, PCFSoftShadowMap, Vector4,
-  Fog, LensFlare, AdditiveBlending, Points } from 'three';
+  Fog, LensFlare, AdditiveBlending, Points, ObjectLoader, Clock } from 'three';
 import Toggle from 'react-toggle';
 import Select from 'react-select';
 import 'react-select/dist/react-select.css';
@@ -21,7 +21,7 @@ import { Terrain } from './external/generator';
 import { Terra } from './external/terra';
 import { OrbitControls } from './external/orbitcontrols';
 import * as heightfield from './external/heightfield';
-
+import { PointerLockControls } from './external/pointerlockcontrols';
 
 import './App.css';
 
@@ -47,11 +47,15 @@ class App extends Component {
     super();
 
     this.scene = new Scene();
-    this.camera = new PerspectiveCamera(75, document.body.clientWidth / document.body.clientHeight, 1, 2000);
+    this.camera = new PerspectiveCamera(75, document.body.clientWidth / document.body.clientHeight, 0.1, 2000);
+    this.camera.name = "camera";
     this.renderer = new WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setSize(document.body.clientWidth, document.body.clientHeight);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
+    this.renderer.gammaInput = true;
+    this.renderer.gammaOutput = true;
+
 
     this.resize = this.resize.bind(this);
     this.initScene = this.initScene.bind(this);
@@ -71,14 +75,14 @@ class App extends Component {
         { value: 2, label: 'Rainy Weather', clearableValue: false },
         { value: 3, label: 'Snowy Weather', clearableValue: false },
       ],
-      timeOptions: [
-        { value: 4, label: 'Day Time', clearableValue: false },
-        { value: 5, label: 'Night Time', clearableValue: false },
+      modeOptions: [
+        { value: 4, label: 'Shadow Demo', clearableValue: false },
+        { value: 5, label: 'House Demo', clearableValue: false },
       ],
     };
 
     this.state.selectedWeather = this.state.weatherOptions[0];
-    this.state.selectedTime = this.state.timeOptions[0];
+    this.state.selectedMode = this.state.modeOptions[1];
   }
 
   componentDidMount() {
@@ -87,8 +91,7 @@ class App extends Component {
 
     const self = this;
 
-    //
-      // Skybox from https://reije081.home.xs4all.nl/skyboxes/
+    // Skybox from https://reije081.home.xs4all.nl/skyboxes/
     new CubeTextureLoader().load([
       'skybox45/skyrender0002.bmp',
       'skybox45/skyrender0005.bmp',
@@ -97,46 +100,50 @@ class App extends Component {
       'skybox45/skyrender0003.bmp',
       'skybox45/skyrender0003.bmp',
     ], (skybox) => {
-      // Loading inspired by: http://stackoverflow.com/a/39136667
-      const assets = [
-              // ground_hmap generated with http://cpetry.github.io/TextureGenerator-Online/
-              { name: 'ground_hmap', url: 'heightmap2.png' },
-              // Grass texture from http://trutextures.blogspot.ca/2013/01/free-seamless-tiling-dead-grass-terrain.html
-              { name: 'grass_texture', url: 'grass/texture.jpg' },
-              { name: 'grass_bumpmap', url: 'grass/bumpmap.jpg' },
-              // // Rock texture from http://www.virtual-lands-3d.com/textures.htm
-              { name: 'rock_texture', url: 'rock2/texture.jpg' },
-              { name: 'rock_bumpmap', url: 'rock2/bumpmap.jpg' },
-              { name: 'lensflare0', url: 'lensflare/lensflare0.png' },
-              // Rain textures from: https://solusipse.net/varia/threejs-examples/realistic-rain/
-              { name: 'rain1', url: 'rain/rain1.png' },
-              { name: 'rain2', url: 'rain/rain2.png' },
-              { name: 'rain3', url: 'rain/rain3.png' },
-              { name: 'rain4', url: 'rain/rain4.png' },
-              { name: 'rain5', url: 'rain/rain5.png' },
-              // Snow textures from: http://oos.moxiecode.com/js_webgl/snowfall/
-              { name: 'snow1', url: 'snow/snowflake1.png' },
-      ];
+      // House from: https://clara.io/view/d5ae6d8e-a942-4067-b966-8802a1b42a9c#
+      new ObjectLoader().load('house/house.json', (house) => {
+        // Loading inspired by: http://stackoverflow.com/a/39136667
+        const assets = [
+                // ground_hmap generated with http://cpetry.github.io/TextureGenerator-Online/
+                { name: 'ground_hmap', url: 'heightmap2.png' },
+                // Grass texture from http://trutextures.blogspot.ca/2013/01/free-seamless-tiling-dead-grass-terrain.html
+                { name: 'grass_texture', url: 'grass/texture.jpg' },
+                { name: 'grass_bumpmap', url: 'grass/bumpmap.jpg' },
+                // // Rock texture from http://www.virtual-lands-3d.com/textures.htm
+                { name: 'rock_texture', url: 'rock2/texture.jpg' },
+                { name: 'rock_bumpmap', url: 'rock2/bumpmap.jpg' },
+                { name: 'lensflare0', url: 'lensflare/lensflare0.png' },
+                // Rain textures from: https://solusipse.net/varia/threejs-examples/realistic-rain/
+                { name: 'rain1', url: 'rain/rain1.png' },
+                { name: 'rain2', url: 'rain/rain2.png' },
+                { name: 'rain3', url: 'rain/rain3.png' },
+                { name: 'rain4', url: 'rain/rain4.png' },
+                { name: 'rain5', url: 'rain/rain5.png' },
+                // Snow textures from: http://oos.moxiecode.com/js_webgl/snowfall/
+                { name: 'snow1', url: 'snow/snowflake1.png' },
+        ];
 
-      const textures = {};
+        const textures = {};
 
-      for (const img of assets) {
-        new TextureLoader().load(img.url, (texture) => {
-          textures[img.name] = texture;
-          assets.splice(assets.indexOf(img), 1);
-          console.log('[TextureLoader] Loaded %o', img.name);
-          if (!assets.length) {
-            self.initScene(
-                  textures.ground_hmap, skybox, textures.grass_texture,
-                  textures.grass_bumpmap, textures.rock_texture, textures.rock_bumpmap,
-                  textures.lensflare0,
-                  [textures.rain1, textures.rain2, textures.rain3, textures.rain4, textures.rain5],
-                  [textures.snow1],
-                );
-            self.renderFrame();
-          }
-        });
-      }
+        for (const img of assets) {
+          new TextureLoader().load(img.url, (texture) => {
+            textures[img.name] = texture;
+            assets.splice(assets.indexOf(img), 1);
+            console.log('[TextureLoader] Loaded %o', img.name);
+            if (!assets.length) {
+              self.initScene(
+                    textures.ground_hmap, skybox, textures.grass_texture,
+                    textures.grass_bumpmap, textures.rock_texture, textures.rock_bumpmap,
+                    textures.lensflare0,
+                    [textures.rain1, textures.rain2, textures.rain3, textures.rain4, textures.rain5],
+                    [textures.snow1],
+                    house
+                  );
+              self.renderFrame();
+            }
+          });
+        }
+      });
     });
   }
 
@@ -148,32 +155,22 @@ class App extends Component {
     this.camera.aspect = document.body.clientWidth / document.body.clientHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(document.body.clientWidth, document.body.clientHeight);
+
+    if (this.state.selectedMode.value === 4) { // Check if shadow demo is enabled.
+      this.controls.handleResize();
+    }
+
+    if(this.houseControls) {
+      // this.houseControls.handleResize();
+    }
   }
 
-  initScene(ground_hmap, skybox, grass_texture, grass_bumpmap, rock_texture, rock_bumpmap, lensflare0, rain_textures, snow_textures) {
+  initScene(ground_hmap, skybox, grass_texture, grass_bumpmap,
+    rock_texture, rock_bumpmap, lensflare0, rain_textures, snow_textures, house) {
     const fast_debug = false;
-    this.camera.position.set(100, 0, 100);
-    this.camera.lookAt(new Vector3(0, 0, 0));
+
     this.scene.add(this.camera);
 
-    // debug camera
-    this.controls = new OrbitControls(this.camera);
-    this.controls.rotateSpeed = 1.0;
-    this.controls.zoomSpeed = 1.2;
-    this.controls.panSpeed = 0.8;
-    this.controls.noZoom = false;
-    this.controls.noPan = false;
-    this.controls.staticMoving = true;
-    this.controls.dynamicDampingFactor = 0.3;
-    this.controls.keys = [65, 83, 68];
-
-    const geometry = new BoxGeometry(10, 10, 10);
-    const material = new MeshLambertMaterial({ color: 0xffffff });
-    this.cube = new Mesh(geometry, material);
-    this.cube.receiveShadow = true;
-    this.cube.castShadow = true;
-    this.cube.position.z += 25;
-    this.scene.add(this.cube);
 
     // Setup ground:
     // Only works on power of 2 heightmaps!
@@ -344,14 +341,184 @@ class App extends Component {
     });
     this.snowSound.play();
 
+    // Add house to the scene.
+    this.house = house;
+    this.house.scale.set(10,10,10);
+    this.house.rotateY(Math.PI/2.0);
+    this.house.rotateZ(Math.PI/2.0);
+    this.house.rotateY(Math.PI/2.0 + Math.PI/4.0);
+    this.house.position.set(400,400,18.5);
+
+    this.scene.add(this.house);
+
+    this.initShadowDemo();
+    this.initHouseDemo();
+
     // DEBUG:
     // this.scene.add(new VertexNormalsHelper(this.ground_mesh, 2, 0x00ff00, 1));
     // this.scene.add(new DirectionalLightHelper(this.sunlight, 5));
     // this.scene.add(new CameraHelper(this.sunlight.shadow.camera));
-    // this.scene.add(new AxisHelper(100));
+    this.scene.add(new AxisHelper(100));
 
     // Tell React that we loaded weathergl
     this.setState(this.state);
+  }
+
+  removeShadowDemo() {
+    if(this.cube) {
+      this.scene.remove(this.cube);
+      this.cube = null;
+      this.controls.dispose();
+      this.controls = null;
+    }
+  }
+
+  initShadowDemo() {
+    if (this.state.selectedMode.value !== 4) { // Check if shadow demo is enabled.
+      return;
+    }
+
+    this.camera.position.set(100, 0, 100);
+    this.camera.up.set(0, 0, 1);
+    this.controls = new OrbitControls(this.camera);
+    this.controls.rotateSpeed = 1.0;
+    this.controls.zoomSpeed = 1.2;
+    this.controls.panSpeed = 0.8;
+    this.controls.noZoom = false;
+    this.controls.noPan = false;
+    this.controls.staticMoving = true;
+    this.controls.dynamicDampingFactor = 0.3;
+    this.controls.keys = [65, 83, 68];
+    this.controls.target = new Vector3(0,0,0);
+    this.controls.update();
+
+
+    const geometry = new BoxGeometry(10, 10, 10);
+    const material = new MeshLambertMaterial({ color: 0xffffff });
+    this.cube = new Mesh(geometry, material);
+    this.cube.receiveShadow = true;
+    this.cube.castShadow = true;
+    this.cube.position.z += 25;
+    this.cube.name = "shadow_cube";
+    this.scene.add(this.cube);
+  }
+
+  updateShadowDemo() {
+    if (this.state.selectedMode.value !== 4) { // Check if shadow demo is enabled.
+      return;
+    }
+
+    if(!this.cube) {
+      return;
+    }
+
+    debugger;
+
+    this.cube.rotation.x += 0.005;
+    this.cube.rotation.y += 0.005;
+
+    this.controls.update();
+  }
+
+  removeHouseDemo() {
+    if(this.houseControls) {
+      this.scene.remove(this.houseControls.getObject());
+      this.houseControls.dispose();
+      this.houseControls = null;
+      this.clock = null;
+      document.removeEventListener('keydown', this.onKeyDown);
+      document.removeEventListener('keyup', this.onKeyUp);
+    }
+  }
+
+  ////
+  // First Person controls for initHouseDemo and updateHouseDemo
+  // are influenced by https://github.com/mrdoob/three.js/blob/dev/examples/misc_controls_pointerlock.html
+  ////
+  initHouseDemo() {
+    if (this.state.selectedMode.value !== 5) { // Check if house demo is enabled.
+      return;
+    }
+
+    this.clock = new Clock();
+
+    this.camera.position.set(400,400,20);
+    this.camera.up.set(0, 0, 1);
+
+    this.houseControls = new PointerLockControls(this.camera);
+    this.houseControls.getObject().name = "house_controls_object";
+    this.scene.add(this.houseControls.getObject());
+
+    this.moveForward = false;
+    this.moveBackward = false;
+    this.moveLeft = false;
+    this.moveRight = false;
+
+    this.prevTime = performance.now();
+    this.velocity = new Vector3();
+
+    this.onKeyDown = ( event ) => {
+      switch ( event.keyCode ) {
+        case 38: // up
+        case 87: // w
+          this.moveForward = true;
+          break;
+        case 37: // left
+        case 65: // a
+          this.moveLeft = true;
+          break;
+        case 40: // down
+        case 83: // s
+          this.moveBackward = true;
+          break;
+        case 39: // right
+        case 68: // d
+          this.moveRight = true;
+          break;
+      }
+    };
+
+    this.onKeyUp = ( event ) => {
+      switch( event.keyCode ) {
+        case 38: // up
+        case 87: // w
+          this.moveForward = false;
+          break;
+        case 37: // left
+        case 65: // a
+          this.moveLeft = false;
+          break;
+        case 40: // down
+        case 83: // s
+          this.moveBackward = false;
+          break;
+        case 39: // right
+        case 68: // d
+          this.moveRight = false;
+          break;
+      }
+    };
+
+    document.addEventListener( 'keydown', this.onKeyDown, false );
+    document.addEventListener( 'keyup', this.onKeyUp, false );
+
+
+    // this.houseControls.update(this.clock.getDelta());
+    // this.houseControls.activeLook = false;
+    // this.houseControls.movementSpeed = 1;
+    // this.houseControls.lookSpeed = 0.1;
+    // this.houseControls.activeLook = true;
+    // this.houseControls.lookVertical = true;
+  }
+
+  updateHouseDemo() {
+    if (this.state.selectedMode.value !== 5) { // Check if house demo is enabled.
+      return;
+    }
+
+    if(!this.houseControls) {
+      return;
+    }
   }
 
   initClear() {
@@ -513,11 +680,8 @@ class App extends Component {
       this.stats.begin();
     }
 
-    this.cube.rotation.x += 0.005;
-    this.cube.rotation.y += 0.005;
-    // this.foregroundSurface.rotation.x += 0.005;
-    // this.foregroundSurface.rotation.y += 0.005;
-    this.controls.update();
+    this.updateShadowDemo();
+    this.updateHouseDemo();
 
     this.animateRain();
     this.animateSnow();
@@ -547,6 +711,20 @@ class App extends Component {
     this.initClear();
     this.initRain(this.rain_textures);
     this.initSnow(this.snow_textures);
+  }
+
+  handleModeOptionsChange(selected) {
+    this.setState({ selectedMode: selected });
+    this.state.selectedMode = selected; // We need to use it right now
+
+    this.scene.remove(this.camera);
+    this.camera = new PerspectiveCamera(75, document.body.clientWidth / document.body.clientHeight, 0.1, 2000);
+    this.camera.name = "camera";
+
+    this.removeShadowDemo();
+    this.removeHouseDemo();
+    this.initShadowDemo();
+    this.initHouseDemo();
   }
 
   handleSunlightChange(light) {
@@ -583,6 +761,14 @@ class App extends Component {
           <h1>WeatherGL</h1>
           <div>
             <p className="wgl-author">By: Robert Gawdzik</p>
+          </div>
+          <div className="menu-item">
+            <Select
+              clearable={false}
+              value={this.state.selectedMode}
+              options={this.state.modeOptions}
+              onChange={this.handleModeOptionsChange.bind(this)}
+            />
           </div>
           <div className="menu-item">
             <Select

@@ -1,6 +1,7 @@
 # WeatherGL
 
-WeatherGL is a React project which requires a javascript development requirement.
+WeatherGL is a React project which requires a javascript development environment.
+ - Documentation is found in weathergl/DOCUMENTATION.md
 
 Screenshots due tomorrow.
 
