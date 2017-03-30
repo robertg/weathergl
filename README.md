@@ -1,7 +1,8 @@
-# WeatherGL: http://gawdzik.net/weathergl/
+# WeatherGL:
 
-WeatherGL is a React project which requires a Javascript development environment.
- - Extensive documentation is found in the final report.
+Currently hosted on github.io: http://gawdzik.net/weathergl/
+
+WeatherGL is a WebGL React project which requires a Javascript development environment.
  - There are two modes:
    - Shadow Mode: Demonstrates a floating cube to showcase shadowmaps
    - House Mode: A bonus mode which enables you to walk around a house in first person.
@@ -19,15 +20,17 @@ npm install
 npm run start
 ```
 
-WeatherGL will appear on localhost:3000.
+WeatherGL will appear on localhost:3000 (or it will give you the option to select another port)
 
 ### Screenshots
- - screenshot1.png: Shadow Demo Mode: Demonstration of dynamic shadow maps
- - screenshot2.png: Demonstration of UI
- - screenshot3.png: Demonstration of bumpmapping on terrain
- - screenshot4.png: Demonstration of House Mode (Bonus) and lens flare effect
- - screenshot5.png: Demonstration of Rainy Weather being enabled.
- - screenshot6.png: Demonstration of Snowy Weather being enabled.
+
+In `screenshots/`
+ - `screenshot1.png`: Shadow Demo Mode: Demonstration of dynamic shadow maps
+ - `screenshot2.png`: Demonstration of UI
+ - `screenshot3.png`: Demonstration of bumpmapping on terrain
+ - `screenshot4.png`: Demonstration of House Mode (Bonus) and lens flare effect
+ - `screenshot5.png`: Demonstration of Rainy Weather being enabled.
+ - `screenshot6.png`: Demonstration of Snowy Weather being enabled.
 
 ### Objectives
 

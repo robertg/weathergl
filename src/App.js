@@ -124,9 +124,9 @@ class App extends Component {
                 // Snow textures from: http://oos.moxiecode.com/js_webgl/snowfall/
                 { name: 'snow1', url: 'snow/snowflake1.png' },
                 // https://cs.uwaterloo.ca/sites/ca.computer-science/files/styles/thumbnail/public/uploads/images/Baranoski_0.jpg
-                { name: 'prof', url: 'baranoski.jpg'},
+                { name: 'prof', url: 'baranoski.jpg' },
                 // https://uwaterloo.ca/president/sites/ca.president/files/resize/styles/sidebar-220px-wide/public/uploads/images/uw_president_01-w2-238x258.jpg
-                { name: 'feridun', url: 'feridun.jpg'}
+                { name: 'feridun', url: 'feridun.jpg' },
         ];
 
         const textures = {};
@@ -145,7 +145,7 @@ class App extends Component {
                     [textures.snow1],
                     house,
                     textures.prof,
-                    textures.feridun
+                    textures.feridun,
                   );
               self.renderFrame();
             }
@@ -165,13 +165,9 @@ class App extends Component {
     this.renderer.setSize(document.body.clientWidth, document.body.clientHeight);
 
     if (this.state.selectedMode.value === 4) { // Check if shadow demo is enabled.
-      if(this.controls) {
+      if (this.controls) {
         this.controls.handleResize();
       }
-    }
-
-    if (this.houseControls) {
-      // this.houseControls.handleResize();
     }
   }
 
@@ -180,7 +176,6 @@ class App extends Component {
     const fast_debug = false;
 
     this.scene.add(this.camera);
-
 
     // Setup ground:
     // Only works on power of 2 heightmaps!
@@ -196,17 +191,10 @@ class App extends Component {
     rock_bumpmap.wrapS = RepeatWrapping;
     rock_bumpmap.wrapT = RepeatWrapping;
 
-    // grass_texture.anisotropy = 16;
-    // rock_texture.anisotropy = 16;
-    // grass_bumpmap.anisotropy = 16;
-    // rock_bumpmap.anisotropy = 16;
-
     const ground_geo = new BufferGeometry();
     // Bump Map GPU tearing occurs as a function of groundHmapSize and xCellCount.
     const groundHmapSize = 1000;
 
-    // const xCellCount = 2048; // Math.floor(Math.sqrt(262144 / (3 * 2)))
-    // const yCellCount = 2048;
     const cellSize = groundHmapSize / ground_hmap.image.width;
 
     if (!fast_debug) {
@@ -264,19 +252,10 @@ class App extends Component {
 
       this.ground_mesh.uvsNeedUpdate = true;
 
-      console.log(this.ground_mesh.geometry);
-
-      // this.ground_mesh.rotation.x = -0.5 * Math.PI;
-
-      // this.ground_mesh.receiveShadow = true;
-      // this.ground_mesh.castShadow = true;
       this.scene.add(this.ground_mesh);
     }
 
     // http://blog.cjgammon.com/threejs-lights-cameras
-    // this.hemisphere_light = new HemisphereLight( 0xffffbb, 0x080820, 1 );
-    // this.scene.add( this.hemisphere_light );
-
     this.ambientlight = new AmbientLight(0xffffbb, 0.20);
     this.scene.add(this.ambientlight);
 
@@ -288,29 +267,22 @@ class App extends Component {
     this.sunlight.castShadow = true;
     this.sunlight.shadow.mapSize.width = 4096;
     this.sunlight.shadow.mapSize.height = 4096;
-    this.sunlight.shadow.camera.near = 2;       // default 0.5
-    this.sunlight.shadow.camera.far = 2000;      // default 500
-
-    // this.sunlight.shadowCameraVisible = true;
-    // this.sunlight.shadowMap.dispose();
-    // this.sunlight.shadowMap = null;
+    this.sunlight.shadow.camera.near = 2;
+    this.sunlight.shadow.camera.far = 2000;
 
     const target = new Object3D();
     target.position.set(0, 0, 0);
-    // this.sunlight.target = target;
-    // this.sunlight.target = this.camera;
     this.scene.add(this.sunlight);
-    // this.scene.add(this.sunlight.target);
 
     // Load Cube Map (source: https://reije081.home.xs4all.nl/skyboxes/ )
     this.scene.background = skybox;
-
 
     // Add fog
     this.scene.fog = new Fog(0xffffff, 50, 1000);
 
     // Add lens flare: (Inspired by https://github.com/timoxley/threejs/blob/master/examples/webgl_lensflares.html)
-    // TODO: If world position is always (0,0,0), this solution is okay. Otherwise position needs to be computed for a 45 deg angle.
+    // TODO: If world position is always (0,0,0), this solution is okay.
+    // Otherwise position needs to be computed for a 45 deg angle.
     this.lensflare = new LensFlare(lensflare0, 300, 0.0, AdditiveBlending, new Color(0xffffbb));
     this.lensflare.position.copy(new Vector3(-600, -600, 1000));
 
@@ -372,22 +344,22 @@ class App extends Component {
     ];
 
     // Add prof to house.
-    let profMaterial = new MeshLambertMaterial({map : prof});
-    let profPlane = new Mesh(new PlaneGeometry(67.0 / 64.0, 100.0 / 64.0), profMaterial);
+    const profMaterial = new MeshLambertMaterial({ map: prof });
+    const profPlane = new Mesh(new PlaneGeometry(67.0 / 64.0, 100.0 / 64.0), profMaterial);
     profPlane.rotateX(Math.PI / 2.0);
     profPlane.rotateY(Math.PI / 4.575);
     profPlane.position.set(391.8, 407.2, 20);
     this.scene.add(profPlane);
 
 
-    let feridunMaterial = new MeshLambertMaterial({map : feridun});
-    let feridunPlane = new Mesh(new PlaneGeometry(238.0 / 256.0 * 1.5, 258.0 / 256.0 * 1.5), feridunMaterial);
+    const feridunMaterial = new MeshLambertMaterial({ map: feridun });
+    const feridunPlane = new Mesh(new PlaneGeometry(238.0 / 256.0 * 1.5, 258.0 / 256.0 * 1.5), feridunMaterial);
     feridunPlane.rotateX(Math.PI / 2.0);
     feridunPlane.rotateY(Math.PI / 4.575);
     feridunPlane.position.set(390.8, 406.2, 20);
     this.scene.add(feridunPlane);
 
-    // DEBUG:
+    // DEBUG helpers (uncomment the ones you want):
     // this.scene.add(new VertexNormalsHelper(this.ground_mesh, 2, 0x00ff00, 1));
     // this.scene.add(new DirectionalLightHelper(this.sunlight, 5));
     // this.scene.add(new CameraHelper(this.sunlight.shadow.camera));
@@ -475,7 +447,7 @@ class App extends Component {
 
   // //
   // First Person controls for initHouseDemo and updateHouseDemo
-  // are influenced by https://github.com/mrdoob/three.js/blob/dev/examples/misc_controls_pointerlock.html
+  // are heavily influenced by https://github.com/mrdoob/three.js/blob/dev/examples/misc_controls_pointerlock.html
   // //
   initHouseDemo() {
     if (this.state.selectedMode.value !== 5) { // Check if house demo is enabled.
@@ -594,13 +566,13 @@ class App extends Component {
       let position;
       this.houseControls.getObject().translateX(this.velocity.x * delta);
       position = this.houseControls.getObject().position;
-      if(!inside([position.x, position.y], this.houseBounds)) {
+      if (!inside([position.x, position.y], this.houseBounds)) {
         this.houseControls.getObject().translateX(this.velocity.x * delta * -1.0);
       }
 
       this.houseControls.getObject().translateY(this.velocity.y * delta);
       position = this.houseControls.getObject().position;
-      if(!inside([position.x, position.y], this.houseBounds)) {
+      if (!inside([position.x, position.y], this.houseBounds)) {
         this.houseControls.getObject().translateY(this.velocity.y * delta * -1.0);
       }
 
@@ -734,7 +706,7 @@ class App extends Component {
       this.rainParticlePositions[x * 3 + 1] = Math.random() * 1000 - Math.random() * 1000;
       this.rainParticlePositions[x * 3 + 2] = Math.random() * 1000;
 
-      if(inside([this.rainParticlePositions[x * 3 + 0], this.rainParticlePositions[x * 3 + 1]], this.houseBounds)) {
+      if (inside([this.rainParticlePositions[x * 3 + 0], this.rainParticlePositions[x * 3 + 1]], this.houseBounds)) {
         this.rainParticlePositions[x * 3 + 2] = 100 + Math.random() * 1000;
       }
     }
@@ -907,7 +879,12 @@ class App extends Component {
           </div>
         </Menu>
 
-        <div id="page-wrap" ref={(node) => { this.node = node; }} onClick={this.handleCanvasClick.bind(this)} className="App" />
+        <div
+          id="page-wrap"
+          ref={(node) => { this.node = node; }}
+          onClick={this.handleCanvasClick.bind(this)}
+          className="App"
+        />
       </div>
     );
   }
