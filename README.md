@@ -2,6 +2,8 @@
 
 Currently hosted on github.io: http://gawdzik.net/weathergl/
 
+![Header Image](/screenshots/main.png?raw=true)
+
 WeatherGL is a WebGL React project which requires a Javascript development environment.
  - There are two interaction modes:
    - **Shadow Mode**: Demonstrates a floating cube to showcase shadowmaps
