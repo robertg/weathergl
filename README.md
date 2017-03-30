@@ -1,11 +1,11 @@
-# WeatherGL:
+# WeatherGL
 
 Currently hosted on github.io: http://gawdzik.net/weathergl/
 
 WeatherGL is a WebGL React project which requires a Javascript development environment.
- - There are two modes:
-   - Shadow Mode: Demonstrates a floating cube to showcase shadowmaps
-   - House Mode: A bonus mode which enables you to walk around a house in first person.
+ - There are two interaction modes:
+   - **Shadow Mode**: Demonstrates a floating cube to showcase shadowmaps
+   - **House Mode**: A bonus mode which enables you to walk around a house in first person.
  - To access the UI, click the burger menu on the top left.
 
 ### Requirements
